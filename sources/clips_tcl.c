@@ -80,6 +80,62 @@ static void clips_tcl_DeleteInterp(
 	Tcl_DeleteInterp(interp.externalAddressValue->contents);
 }
 
+static void clips_tcl_EvalEx(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue script;
+	UDFValue flags;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, STRING_BIT, &script);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
+
+	int numBytes = strlen(script.lexemeValue->contents);
+
+	int flags_value = 0;
+	const char *p = flags.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
+
+		if (!*++p)
+			break;
+
+		assert(strncmp(p, "eval-", 5) == 0);
+		p += 5;
+		switch (*p) {
+		case 'd':
+			assert(strncmp(p, "direct", 6) == 0);
+			flags_value |= TCL_EVAL_DIRECT;
+			p += 6;
+			break;
+		case 'g':
+			assert(strncmp(p, "global", 6) == 0);
+			flags_value |= TCL_EVAL_GLOBAL;
+			p += 6;
+			break;
+		default:
+			assert(false);
+		}
+	}
+
+	int r = Tcl_EvalEx(interp.externalAddressValue->contents,
+			   script.externalAddressValue->contents,
+			   numBytes,
+			   flags_value);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = CreateBoolean(env, true);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = CreateBoolean(env, false);
+		break;
+	default:
+		out->integerValue = CreateInteger(env, r);
+	}
+
+}
 static void clips_tcl_EvalObjEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -564,6 +620,13 @@ void UserFunctions(Environment *env)
 	       "v", 1, 1, ";e",
 	       clips_tcl_DeleteInterp,
 	       "clips_tcl_DeleteInterp",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-eval-ex",
+	       "bl", 3, 3, ";e;s;y",
+	       clips_tcl_EvalEx,
+	       "clips_tcl_EvalEx",
 	       NULL);
 
 	AddUDF(env,
