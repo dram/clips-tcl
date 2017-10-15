@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include <tcl.h>
 
 #include "clips/clips.h"
@@ -9,8 +11,8 @@
 /// 2. Several API use integer to represent flags (e.g. Tcl_EvalObjv,
 ///    Tcl_OpenCommandChannel), but CLIPS currently do not support
 ///    bitwise operations, and also it seems that there is no easy to
-///    define global variables in C side, so symbol multifields is
-///    used here.
+///    define CLIPS constants in C side, so here we use a formatted
+///    symbol (delimited by `/`).
 /// 3. As there is no way to count octets in CLIPS, so we count it in
 ///    C side (e.g. Tcl_NewStringObj).
 
@@ -83,18 +85,32 @@ static void clips_tcl_EvalObjEx(
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
-	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &flags);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
 	int flags_value = 0;
-	int flags_length = flags.multifieldValue->length;
-	CLIPSValue *flags_fields = flags.multifieldValue->contents;
-	for (int i = 0; i < flags_length; ++i) {
-		const char *s = flags_fields[i].lexemeValue->contents;
+	const char *p = flags.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
 
-		if (strcmp(s, "eval-direct") == 0)
+		if (!*++p)
+			break;
+
+		assert(strncmp(p, "eval-", 5) == 0);
+		p += 5;
+		switch (*p) {
+		case 'd':
+			assert(strncmp(p, "direct", 6) == 0);
 			flags_value |= TCL_EVAL_DIRECT;
-		else if (strcmp(s, "eval-global") == 0)
+			p += 6;
+			break;
+		case 'g':
+			assert(strncmp(p, "global", 6) == 0);
 			flags_value |= TCL_EVAL_GLOBAL;
+			p += 6;
+			break;
+		default:
+			assert(false);
+		}
 	}
 
 	out->integerValue = CreateInteger(
@@ -113,7 +129,7 @@ static void clips_tcl_EvalObjv(
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, MULTIFIELD_BIT, &objv);
-	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &flags);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
 	int objc = objv.multifieldValue->length;
 
@@ -124,15 +140,29 @@ static void clips_tcl_EvalObjv(
 		objv_value[i] = fields[i].externalAddressValue->contents;
 
 	int flags_value = 0;
-	int flags_length = flags.multifieldValue->length;
-	CLIPSValue *flags_fields = flags.multifieldValue->contents;
-	for (int i = 0; i < flags_length; ++i) {
-		const char *s = flags_fields[i].lexemeValue->contents;
+	const char *p = flags.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
 
-		if (strcmp(s, "eval-direct") == 0)
+		if (!*++p)
+			break;
+
+		assert(strncmp(p, "eval-", 5) == 0);
+		p += 5;
+		switch (*p) {
+		case 'd':
+			assert(strncmp(p, "direct", 6) == 0);
 			flags_value |= TCL_EVAL_DIRECT;
-		else if (strcmp(s, "eval-global") == 0)
+			p += 6;
+			break;
+		case 'g':
+			assert(strncmp(p, "global", 6) == 0);
 			flags_value |= TCL_EVAL_GLOBAL;
+			p += 6;
+			break;
+		default:
+			assert(false);
+		}
 	}
 
 	out->integerValue = CreateInteger(
@@ -206,24 +236,43 @@ static void clips_tcl_GetVar(
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, STRING_BIT, &varName);
-	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &flags);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
 	int flags_value = 0;
-	int flags_length = flags.multifieldValue->length;
-	CLIPSValue *flags_fields = flags.multifieldValue->contents;
-	for (int i = 0; i < flags_length; ++i) {
-		const char *s = flags_fields[i].lexemeValue->contents;
+	const char *p = flags.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
 
-		if (strcmp(s, "global-only") == 0)
-			flags_value |= TCL_GLOBAL_ONLY;
-		else if (strcmp(s, "namespace-only") == 0)
-			flags_value |= TCL_NAMESPACE_ONLY;
-		else if (strcmp(s, "leave-err-msg") == 0)
-			flags_value |= TCL_LEAVE_ERR_MSG;
-		else if (strcmp(s, "append-value") == 0)
+		if (!*++p)
+			break;
+
+		switch (*p) {
+		case 'a':
+			assert(strncmp(p, "append-value", 12) == 0);
 			flags_value |= TCL_APPEND_VALUE;
-		else if (strcmp(s, "list-element") == 0)
-			flags_value |= TCL_LIST_ELEMENT;
+			p += 12;
+			break;
+		case 'g':
+			assert(strncmp(p, "global-only", 11) == 0);
+			flags_value |= TCL_GLOBAL_ONLY;
+			p += 11;
+			break;
+		case 'l':
+			switch (*p) {
+			case 'e':
+				assert(strncmp(p, "leave-err-msg", 13) == 0);
+				flags_value |= TCL_LEAVE_ERR_MSG;
+				p += 13;
+			case 'i':
+				assert(strncmp(p, "list-element", 12) == 0);
+				flags_value |= TCL_LIST_ELEMENT;
+				p += 12;
+			default:
+				assert(false);
+			}
+		default:
+			assert(false);
+		}
 	}
 
 	out->lexemeValue = CreateString(
@@ -291,7 +340,7 @@ static void clips_tcl_OpenCommandChannel(
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, MULTIFIELD_BIT, &argv);
-	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &flags);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
 	int argc = argv.multifieldValue->length;
 
@@ -302,19 +351,45 @@ static void clips_tcl_OpenCommandChannel(
 		argv_value[i] = fields[i].lexemeValue->contents;
 
 	int flags_value = 0;
-	int flags_length = flags.multifieldValue->length;
-	CLIPSValue *flags_fields = flags.multifieldValue->contents;
-	for (int i = 0; i < flags_length; ++i) {
-		const char *s = flags_fields[i].lexemeValue->contents;
+	const char *p = flags.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
 
-		if (strcmp(s, "stdin") == 0)
-			flags_value |= TCL_STDIN;
-		else if (strcmp(s, "stdout") == 0)
-			flags_value |= TCL_STDOUT;
-		else if (strcmp(s, "stderr") == 0)
-			flags_value |= TCL_STDERR;
-		else if (strcmp(s, "enforce-mode") == 0)
+		if (!*++p)
+			break;
+
+		switch (*p) {
+		case 'e':
+			assert(strncmp(p, "enforce-mode", 12) == 0);
 			flags_value |= TCL_ENFORCE_MODE;
+			p += 12;
+			break;
+		case 's':
+			assert(strncmp(p, "std", 3) == 0);
+			p += 3;
+			switch (*p) {
+			case 'e':
+				assert(strncmp(p, "err", 3) == 0);
+				flags_value |= TCL_STDERR;
+				p += 3;
+				break;
+			case 'i':
+				assert(strncmp(p, "in", 2) == 0);
+				flags_value |= TCL_STDIN;
+				p += 2;
+				break;
+			case 'o':
+				assert(strncmp(p, "out", 3) == 0);
+				flags_value |= TCL_STDOUT;
+				p += 3;
+				break;
+			default:
+				assert(false);
+			}
+			break;
+		default:
+			assert(false);
+		}
 	}
 
 	out->externalAddressValue = CreateExternalAddress(
@@ -385,14 +460,14 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-eval-obj-ex",
-	       "l", 3, 3, ";e;e;m",
+	       "l", 3, 3, ";e;e;y",
 	       clips_tcl_EvalObjEx,
 	       "clips_tcl_EvalObjEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-objv",
-	       "l", 3, 3, ";e;m;m",
+	       "l", 3, 3, ";e;m;y",
 	       clips_tcl_EvalObjv,
 	       "clips_tcl_EvalObjv",
 	       NULL);
@@ -427,7 +502,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-get-var",
-	       "s", 3, 3, ";e;s;m",
+	       "s", 3, 3, ";e;s;y",
 	       clips_tcl_GetVar,
 	       "clips_tcl_GetVar",
 	       NULL);
@@ -462,7 +537,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-open-command-channel",
-	       "e", 3, 3, ";e;m;m",
+	       "e", 3, 3, ";e;m;y",
 	       clips_tcl_OpenCommandChannel,
 	       "clips_tcl_OpenCommandChannel",
 	       NULL);
