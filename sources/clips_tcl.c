@@ -93,7 +93,7 @@ static void clips_tcl_EvalEx(
 
 	int numBytes = strlen(script.lexemeValue->contents);
 
-	int flags_value = 0;
+	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -106,12 +106,12 @@ static void clips_tcl_EvalEx(
 		switch (*p) {
 		case 'd':
 			assert(strncmp(p, "direct", 6) == 0);
-			flags_value |= TCL_EVAL_DIRECT;
+			flagsValue |= TCL_EVAL_DIRECT;
 			p += 6;
 			break;
 		case 'g':
 			assert(strncmp(p, "global", 6) == 0);
-			flags_value |= TCL_EVAL_GLOBAL;
+			flagsValue |= TCL_EVAL_GLOBAL;
 			p += 6;
 			break;
 		default:
@@ -122,7 +122,7 @@ static void clips_tcl_EvalEx(
 	int r = Tcl_EvalEx(interp.externalAddressValue->contents,
 			   script.externalAddressValue->contents,
 			   numBytes,
-			   flags_value);
+			   flagsValue);
 
 	switch (r) {
 	case TCL_OK:
@@ -147,7 +147,7 @@ static void clips_tcl_EvalObjEx(
 	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
 	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
-	int flags_value = 0;
+	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -160,12 +160,12 @@ static void clips_tcl_EvalObjEx(
 		switch (*p) {
 		case 'd':
 			assert(strncmp(p, "direct", 6) == 0);
-			flags_value |= TCL_EVAL_DIRECT;
+			flagsValue |= TCL_EVAL_DIRECT;
 			p += 6;
 			break;
 		case 'g':
 			assert(strncmp(p, "global", 6) == 0);
-			flags_value |= TCL_EVAL_GLOBAL;
+			flagsValue |= TCL_EVAL_GLOBAL;
 			p += 6;
 			break;
 		default:
@@ -175,7 +175,7 @@ static void clips_tcl_EvalObjEx(
 
 	int r = Tcl_EvalObjEx(interp.externalAddressValue->contents,
 			      objPtr.externalAddressValue->contents,
-			      flags_value);
+			      flagsValue);
 
 	switch (r) {
 	case TCL_OK:
@@ -203,13 +203,13 @@ static void clips_tcl_EvalObjv(
 
 	int objc = objv.multifieldValue->length;
 
-	size_t objv_value_size = objc * sizeof (Tcl_Obj *);
-	Tcl_Obj **objv_value = genalloc(env, objv_value_size);
+	size_t objvValueSize = objc * sizeof (Tcl_Obj *);
+	Tcl_Obj **objvValue = genalloc(env, objvValueSize);
 	CLIPSValue *fields = objv.multifieldValue->contents;
 	for (int i = 0; i < objc; ++i)
-		objv_value[i] = fields[i].externalAddressValue->contents;
+		objvValue[i] = fields[i].externalAddressValue->contents;
 
-	int flags_value = 0;
+	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -222,12 +222,12 @@ static void clips_tcl_EvalObjv(
 		switch (*p) {
 		case 'd':
 			assert(strncmp(p, "direct", 6) == 0);
-			flags_value |= TCL_EVAL_DIRECT;
+			flagsValue |= TCL_EVAL_DIRECT;
 			p += 6;
 			break;
 		case 'g':
 			assert(strncmp(p, "global", 6) == 0);
-			flags_value |= TCL_EVAL_GLOBAL;
+			flagsValue |= TCL_EVAL_GLOBAL;
 			p += 6;
 			break;
 		default:
@@ -237,8 +237,8 @@ static void clips_tcl_EvalObjv(
 
 	int r = Tcl_EvalObjv(interp.externalAddressValue->contents,
 			     objc,
-			     objv_value,
-			     flags_value);
+			     objvValue,
+			     flagsValue);
 
 	switch (r) {
 	case TCL_OK:
@@ -251,7 +251,7 @@ static void clips_tcl_EvalObjv(
 		out->integerValue = CreateInteger(env, r);
 	}
 
-	genfree(env, objv_value, objv_value_size);
+	genfree(env, objvValue, objvValueSize);
 }
 
 static void clips_tcl_Flush(
@@ -342,7 +342,7 @@ static void clips_tcl_GetVar(
 	UDFNthArgument(udfc, 2, STRING_BIT, &varName);
 	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
-	int flags_value = 0;
+	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -353,23 +353,23 @@ static void clips_tcl_GetVar(
 		switch (*p) {
 		case 'a':
 			assert(strncmp(p, "append-value", 12) == 0);
-			flags_value |= TCL_APPEND_VALUE;
+			flagsValue |= TCL_APPEND_VALUE;
 			p += 12;
 			break;
 		case 'g':
 			assert(strncmp(p, "global-only", 11) == 0);
-			flags_value |= TCL_GLOBAL_ONLY;
+			flagsValue |= TCL_GLOBAL_ONLY;
 			p += 11;
 			break;
 		case 'l':
 			switch (*p) {
 			case 'e':
 				assert(strncmp(p, "leave-err-msg", 13) == 0);
-				flags_value |= TCL_LEAVE_ERR_MSG;
+				flagsValue |= TCL_LEAVE_ERR_MSG;
 				p += 13;
 			case 'i':
 				assert(strncmp(p, "list-element", 12) == 0);
-				flags_value |= TCL_LIST_ELEMENT;
+				flagsValue |= TCL_LIST_ELEMENT;
 				p += 12;
 			default:
 				assert(false);
@@ -383,7 +383,7 @@ static void clips_tcl_GetVar(
 		env,
 		Tcl_GetVar(interp.externalAddressValue->contents,
 			   varName.lexemeValue->contents,
-			   flags_value));
+			   flagsValue));
 }
 
 static void clips_tcl_GetsObj(
@@ -480,13 +480,13 @@ static void clips_tcl_OpenCommandChannel(
 
 	int argc = argv.multifieldValue->length;
 
-	size_t argv_value_size = argc * sizeof (const char *);
-	const char **argv_value = genalloc(env, argv_value_size);
+	size_t argvValueSize = argc * sizeof (const char *);
+	const char **argvValue = genalloc(env, argvValueSize);
 	CLIPSValue *fields = argv.multifieldValue->contents;
 	for (int i = 0; i < argc; ++i)
-		argv_value[i] = fields[i].lexemeValue->contents;
+		argvValue[i] = fields[i].lexemeValue->contents;
 
-	int flags_value = 0;
+	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -497,7 +497,7 @@ static void clips_tcl_OpenCommandChannel(
 		switch (*p) {
 		case 'e':
 			assert(strncmp(p, "enforce-mode", 12) == 0);
-			flags_value |= TCL_ENFORCE_MODE;
+			flagsValue |= TCL_ENFORCE_MODE;
 			p += 12;
 			break;
 		case 's':
@@ -506,17 +506,17 @@ static void clips_tcl_OpenCommandChannel(
 			switch (*p) {
 			case 'e':
 				assert(strncmp(p, "err", 3) == 0);
-				flags_value |= TCL_STDERR;
+				flagsValue |= TCL_STDERR;
 				p += 3;
 				break;
 			case 'i':
 				assert(strncmp(p, "in", 2) == 0);
-				flags_value |= TCL_STDIN;
+				flagsValue |= TCL_STDIN;
 				p += 2;
 				break;
 			case 'o':
 				assert(strncmp(p, "out", 3) == 0);
-				flags_value |= TCL_STDOUT;
+				flagsValue |= TCL_STDOUT;
 				p += 3;
 				break;
 			default:
@@ -532,11 +532,11 @@ static void clips_tcl_OpenCommandChannel(
 		env,
 		Tcl_OpenCommandChannel(interp.externalAddressValue->contents,
 				       argc,
-				       argv_value,
-				       flags_value),
+				       argvValue,
+				       flagsValue),
 		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 
-	genfree(env, argv_value, argv_value_size);
+	genfree(env, argvValue, argvValueSize);
 }
 
 static void clips_tcl_SplitList(
