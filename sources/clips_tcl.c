@@ -117,11 +117,21 @@ static void clips_tcl_EvalObjEx(
 		}
 	}
 
-	out->integerValue = CreateInteger(
-		env,
-		Tcl_EvalObjEx(interp.externalAddressValue->contents,
+	int r = Tcl_EvalObjEx(interp.externalAddressValue->contents,
 			      objPtr.externalAddressValue->contents,
-			      flags_value));
+			      flags_value);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = CreateBoolean(env, true);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = CreateBoolean(env, false);
+		break;
+	default:
+		out->integerValue = CreateInteger(env, r);
+	}
+
 }
 
 static void clips_tcl_EvalObjv(
@@ -169,12 +179,21 @@ static void clips_tcl_EvalObjv(
 		}
 	}
 
-	out->integerValue = CreateInteger(
-		env,
-		Tcl_EvalObjv(interp.externalAddressValue->contents,
+	int r = Tcl_EvalObjv(interp.externalAddressValue->contents,
 			     objc,
 			     objv_value,
-			     flags_value));
+			     flags_value);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = CreateBoolean(env, true);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = CreateBoolean(env, false);
+		break;
+	default:
+		out->integerValue = CreateInteger(env, r);
+	}
 
 	genfree(env, objv_value, objv_value_size);
 }
@@ -549,14 +568,14 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-eval-obj-ex",
-	       "l", 3, 3, ";e;e;y",
+	       "bl", 3, 3, ";e;e;y",
 	       clips_tcl_EvalObjEx,
 	       "clips_tcl_EvalObjEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-objv",
-	       "l", 3, 3, ";e;m;y",
+	       "bl", 3, 3, ";e;m;y",
 	       clips_tcl_EvalObjv,
 	       "clips_tcl_EvalObjv",
 	       NULL);
