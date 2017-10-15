@@ -443,6 +443,28 @@ static void clips_tcl_ListObjGetElements(
 	}
 }
 
+static void clips_tcl_Merge(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue argv;
+
+	UDFNthArgument(udfc, 1, MULTIFIELD_BIT, &argv);
+
+	int argc = argv.multifieldValue->length;
+
+	size_t argvValueSize = argc * sizeof (const char *);
+	const char **argvValue = genalloc(env, argvValueSize);
+	CLIPSValue *fields = argv.multifieldValue->contents;
+	for (int i = 0; i < argc; ++i)
+		argvValue[i] = fields[i].lexemeValue->contents;
+
+	char *r = Tcl_Merge(argc, argvValue);
+	out->lexemeValue = CreateString(env, r);
+	Tcl_Free(r);
+
+	genfree(env, argvValue, argvValueSize);
+}
+
 static void clips_tcl_NewListObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -734,6 +756,13 @@ void UserFunctions(Environment *env)
 	       "bm", 2, 2, ";e;e",
 	       clips_tcl_ListObjGetElements,
 	       "clips_tcl_ListObjGetElements",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-merge",
+	       "s", 1, 1, ";m",
+	       clips_tcl_Merge,
+	       "clips_tcl_Merge",
 	       NULL);
 
 	AddUDF(env,
