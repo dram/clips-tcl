@@ -15,6 +15,10 @@
 ///    symbol (delimited by `/`).
 /// 3. As there is no way to count octets in CLIPS, so we count it in
 ///    C side (e.g. Tcl_NewStringObj).
+/// 4. Several API in Tcl will modify passed pointer argument
+///    (e.g. Tcl_SplitList), which CLIPS can not simulate. Here we try
+///    to override return value for different types (e.g using FALSE
+///    to represent TCL_ERROR).
 
 enum {
 	CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS = C_POINTER_EXTERNAL_ADDRESS + 1,
@@ -307,6 +311,38 @@ static void clips_tcl_IncrRefCount(
 	Tcl_IncrRefCount((Tcl_Obj *) objPtr.externalAddressValue->contents);
 }
 
+static void clips_tcl_ListObjGetElements(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue listPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &listPtr);
+
+	int objc;
+	Tcl_Obj **objv;
+	int r = Tcl_ListObjGetElements(interp.externalAddressValue->contents,
+				       listPtr.externalAddressValue->contents,
+				       &objc,
+				       &objv);
+
+	if (r == TCL_OK) {
+		MultifieldBuilder *mb = CreateMultifieldBuilder(env, objc);
+		for (int i = 0; i < objc; ++i)
+			MBAppendCLIPSExternalAddress(
+				mb,
+				CreateExternalAddress(
+					env,
+					objv[i],
+					CLIPS_TCL_OBJ_EXTERNAL_ADDRESS));
+		out->multifieldValue = MBCreate(mb);
+		MBDispose(mb);
+	} else {
+		out->lexemeValue = CreateBoolean(env, false);
+	}
+}
+
 static void clips_tcl_NewObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -401,6 +437,34 @@ static void clips_tcl_OpenCommandChannel(
 		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 
 	genfree(env, argv_value, argv_value_size);
+}
+
+static void clips_tcl_SplitList(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue list;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, STRING_BIT, &list);
+
+	int argc;
+	const char **argv;
+	int r = Tcl_SplitList(interp.externalAddressValue->contents,
+			      list.lexemeValue->contents,
+			      &argc,
+			      &argv);
+
+	if (r == TCL_OK) {
+		MultifieldBuilder *mb = CreateMultifieldBuilder(env, argc);
+		for (int i = 0; i < argc; ++i)
+			MBAppendString(mb, argv[i]);
+		out->multifieldValue = MBCreate(mb);
+		MBDispose(mb);
+		Tcl_Free((void *) argv);
+	} else {
+		out->lexemeValue = CreateBoolean(env, false);
+	}
 }
 
 static void clips_tcl_WriteChars(
@@ -522,6 +586,13 @@ void UserFunctions(Environment *env)
 	       NULL);
 
 	AddUDF(env,
+	       "tcl-list-obj-get-elements",
+	       "bm", 2, 2, ";e;e",
+	       clips_tcl_ListObjGetElements,
+	       "clips_tcl_ListObjGetElements",
+	       NULL);
+
+	AddUDF(env,
 	       "tcl-new-obj",
 	       "e", 0, 0, "",
 	       clips_tcl_NewObj,
@@ -540,6 +611,13 @@ void UserFunctions(Environment *env)
 	       "e", 3, 3, ";e;m;y",
 	       clips_tcl_OpenCommandChannel,
 	       "clips_tcl_OpenCommandChannel",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-split-list",
+	       "bm", 2, 2, ";e;s",
+	       clips_tcl_SplitList,
+	       "clips_tcl_SplitList",
 	       NULL);
 
 	AddUDF(env,
