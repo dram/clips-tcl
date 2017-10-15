@@ -203,11 +203,11 @@ static void clips_tcl_EvalObjv(
 
 	int objc = objv.multifieldValue->length;
 
-	size_t objvValueSize = objc * sizeof (Tcl_Obj *);
-	Tcl_Obj **objvValue = genalloc(env, objvValueSize);
+	size_t objvContentsSize = objc * sizeof (Tcl_Obj *);
+	Tcl_Obj **objvContents = genalloc(env, objvContentsSize);
 	CLIPSValue *fields = objv.multifieldValue->contents;
 	for (int i = 0; i < objc; ++i)
-		objvValue[i] = fields[i].externalAddressValue->contents;
+		objvContents[i] = fields[i].externalAddressValue->contents;
 
 	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -237,7 +237,7 @@ static void clips_tcl_EvalObjv(
 
 	int r = Tcl_EvalObjv(interp.externalAddressValue->contents,
 			     objc,
-			     objvValue,
+			     objvContents,
 			     flagsValue);
 
 	switch (r) {
@@ -251,7 +251,7 @@ static void clips_tcl_EvalObjv(
 		out->integerValue = CreateInteger(env, r);
 	}
 
-	genfree(env, objvValue, objvValueSize);
+	genfree(env, objvContents, objvContentsSize);
 }
 
 static void clips_tcl_Flush(
@@ -452,17 +452,17 @@ static void clips_tcl_Merge(
 
 	int argc = argv.multifieldValue->length;
 
-	size_t argvValueSize = argc * sizeof (const char *);
-	const char **argvValue = genalloc(env, argvValueSize);
+	size_t argvContentsSize = argc * sizeof (const char *);
+	const char **argvContents = genalloc(env, argvContentsSize);
 	CLIPSValue *fields = argv.multifieldValue->contents;
 	for (int i = 0; i < argc; ++i)
-		argvValue[i] = fields[i].lexemeValue->contents;
+		argvContents[i] = fields[i].lexemeValue->contents;
 
-	char *r = Tcl_Merge(argc, argvValue);
+	char *r = Tcl_Merge(argc, argvContents);
 	out->lexemeValue = CreateString(env, r);
 	Tcl_Free(r);
 
-	genfree(env, argvValue, argvValueSize);
+	genfree(env, argvContents, argvContentsSize);
 }
 
 static void clips_tcl_NewListObj(
@@ -474,18 +474,18 @@ static void clips_tcl_NewListObj(
 
 	int objc = objv.multifieldValue->length;
 
-	size_t objvValueSize = objc * sizeof (Tcl_Obj *);
-	Tcl_Obj **objvValue = genalloc(env, objvValueSize);
+	size_t objvContentsSize = objc * sizeof (Tcl_Obj *);
+	Tcl_Obj **objvContents = genalloc(env, objvContentsSize);
 	CLIPSValue *fields = objv.multifieldValue->contents;
 	for (int i = 0; i < objc; ++i)
-		objvValue[i] = fields[i].externalAddressValue->contents;
+		objvContents[i] = fields[i].externalAddressValue->contents;
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
-		Tcl_NewListObj(objc, objvValue),
+		Tcl_NewListObj(objc, objvContents),
 		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
 
-	genfree(env, objvValue, objvValueSize);
+	genfree(env, objvContents, objvContentsSize);
 }
 
 static void clips_tcl_NewObj(
@@ -525,11 +525,11 @@ static void clips_tcl_OpenCommandChannel(
 
 	int argc = argv.multifieldValue->length;
 
-	size_t argvValueSize = argc * sizeof (const char *);
-	const char **argvValue = genalloc(env, argvValueSize);
+	size_t argvContentsSize = argc * sizeof (const char *);
+	const char **argvContents = genalloc(env, argvContentsSize);
 	CLIPSValue *fields = argv.multifieldValue->contents;
 	for (int i = 0; i < argc; ++i)
-		argvValue[i] = fields[i].lexemeValue->contents;
+		argvContents[i] = fields[i].lexemeValue->contents;
 
 	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -577,11 +577,11 @@ static void clips_tcl_OpenCommandChannel(
 		env,
 		Tcl_OpenCommandChannel(interp.externalAddressValue->contents,
 				       argc,
-				       argvValue,
+				       argvContents,
 				       flagsValue),
 		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 
-	genfree(env, argvValue, argvValueSize);
+	genfree(env, argvContents, argvContentsSize);
 }
 
 static void clips_tcl_SplitList(
