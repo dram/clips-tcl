@@ -357,7 +357,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-close",
-	       "l", 2, 2, "ee",
+	       "l", 2, 2, ";e;e",
 	       clips_tcl_Close,
 	       "clips_tcl_Close",
 	       NULL);
@@ -371,77 +371,77 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-decr-ref-count",
-	       "v", 1, 1, "e",
+	       "v", 1, 1, ";e",
 	       clips_tcl_DecrRefCount,
 	       "clips_tcl_DecrRefCount",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-delete-interp",
-	       "v", 1, 1, "e",
+	       "v", 1, 1, ";e",
 	       clips_tcl_DeleteInterp,
 	       "clips_tcl_DeleteInterp",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-obj-ex",
-	       "l", 3, 3, "esm",
+	       "l", 3, 3, ";e;e;m",
 	       clips_tcl_EvalObjEx,
 	       "clips_tcl_EvalObjEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-objv",
-	       "l", 3, 3, "emm",
+	       "l", 3, 3, ";e;m;m",
 	       clips_tcl_EvalObjv,
 	       "clips_tcl_EvalObjv",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-flush",
-	       "l", 1, 1, "e",
+	       "l", 1, 1, ";e",
 	       clips_tcl_Flush,
 	       "clips_tcl_Flush",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-fs-stat",
-	       "l", 2, 2, "ee",
+	       "l", 2, 2, ";e;e",
 	       clips_tcl_FSStat,
 	       "clips_tcl_FSStat",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-modification-time-from-stat",
-	       "l", 1, 1, "e",
+	       "l", 1, 1, ";e",
 	       clips_tcl_GetModificationTimeFromStat,
 	       "clips_tcl_GetModificationTimeFromStat",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-string",
-	       "s", 1, 1, "e",
+	       "s", 1, 1, ";e",
 	       clips_tcl_GetString,
 	       "clips_tcl_GetString",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-var",
-	       "s", 3, 3, "esm",
+	       "s", 3, 3, ";e;s;m",
 	       clips_tcl_GetVar,
 	       "clips_tcl_GetVar",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-gets-obj",
-	       "l", 2, 2, "ee",
+	       "l", 2, 2, ";e;e",
 	       clips_tcl_GetsObj,
 	       "clips_tcl_GetsObj",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-incr-ref-count",
-	       "v", 1, 1, "e",
+	       "v", 1, 1, ";e",
 	       clips_tcl_IncrRefCount,
 	       "clips_tcl_IncrRefCount",
 	       NULL);
@@ -455,21 +455,21 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-new-string-obj",
-	       "e", 1, 1, "s",
+	       "e", 1, 1, ";s",
 	       clips_tcl_NewStringObj,
 	       "clips_tcl_NewStringObj",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-open-command-channel",
-	       "e", 3, 3, "emm",
+	       "e", 3, 3, ";e;m;m",
 	       clips_tcl_OpenCommandChannel,
 	       "clips_tcl_OpenCommandChannel",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-write-chars",
-	       "l", 2, 2, "es",
+	       "l", 2, 2, ";e;s",
 	       clips_tcl_WriteChars,
 	       "clips_tcl_WriteChars",
 	       NULL);
