@@ -443,6 +443,29 @@ static void clips_tcl_ListObjGetElements(
 	}
 }
 
+static void clips_tcl_NewListObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objv;
+
+	UDFNthArgument(udfc, 1, MULTIFIELD_BIT, &objv);
+
+	int objc = objv.multifieldValue->length;
+
+	size_t objvValueSize = objc * sizeof (Tcl_Obj *);
+	Tcl_Obj **objvValue = genalloc(env, objvValueSize);
+	CLIPSValue *fields = objv.multifieldValue->contents;
+	for (int i = 0; i < objc; ++i)
+		objvValue[i] = fields[i].externalAddressValue->contents;
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_NewListObj(objc, objvValue),
+		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+
+	genfree(env, objvValue, objvValueSize);
+}
+
 static void clips_tcl_NewObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -711,6 +734,13 @@ void UserFunctions(Environment *env)
 	       "bm", 2, 2, ";e;e",
 	       clips_tcl_ListObjGetElements,
 	       "clips_tcl_ListObjGetElements",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-new-list-obj",
+	       "e", 1, 1, ";m",
+	       clips_tcl_NewListObj,
+	       "clips_tcl_NewListObj",
 	       NULL);
 
 	AddUDF(env,
