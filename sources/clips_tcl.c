@@ -219,6 +219,19 @@ static void clips_tcl_GetModificationTimeFromStat(
 			statPtr.externalAddressValue->contents));
 }
 
+static void clips_tcl_GetObjResult(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_GetObjResult(interp.externalAddressValue->contents),
+		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
+}
+
 static void clips_tcl_GetString(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -229,6 +242,18 @@ static void clips_tcl_GetString(
 	out->lexemeValue = CreateString(
 		env,
 		Tcl_GetString(objPtr.externalAddressValue->contents));
+}
+
+static void clips_tcl_GetStringResult(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+
+	out->lexemeValue = CreateString(
+		env,
+		Tcl_GetStringResult(interp.externalAddressValue->contents));
 }
 
 static void clips_tcl_GetVar(
@@ -558,10 +583,24 @@ void UserFunctions(Environment *env)
 	       NULL);
 
 	AddUDF(env,
+	       "tcl-get-obj-result",
+	       "e", 1, 1, ";e",
+	       clips_tcl_GetObjResult,
+	       "clips_tcl_GetObjResult",
+	       NULL);
+
+	AddUDF(env,
 	       "tcl-get-string",
 	       "s", 1, 1, ";e",
 	       clips_tcl_GetString,
 	       "clips_tcl_GetString",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-get-string-result",
+	       "s", 1, 1, ";e",
+	       clips_tcl_GetStringResult,
+	       "clips_tcl_GetStringResult",
 	       NULL);
 
 	AddUDF(env,
