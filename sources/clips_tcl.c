@@ -126,10 +126,10 @@ static void clips_tcl_EvalEx(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = CreateBoolean(env, true);
+		out->lexemeValue = TrueSymbol(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = CreateBoolean(env, false);
+		out->lexemeValue = FalseSymbol(env);
 		break;
 	default:
 		out->integerValue = CreateInteger(env, r);
@@ -179,10 +179,10 @@ static void clips_tcl_EvalObjEx(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = CreateBoolean(env, true);
+		out->lexemeValue = TrueSymbol(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = CreateBoolean(env, false);
+		out->lexemeValue = FalseSymbol(env);
 		break;
 	default:
 		out->integerValue = CreateInteger(env, r);
@@ -242,10 +242,10 @@ static void clips_tcl_EvalObjv(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = CreateBoolean(env, true);
+		out->lexemeValue = TrueSymbol(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = CreateBoolean(env, false);
+		out->lexemeValue = FalseSymbol(env);
 		break;
 	default:
 		out->integerValue = CreateInteger(env, r);
@@ -439,7 +439,7 @@ static void clips_tcl_ListObjGetElements(
 		out->multifieldValue = MBCreate(mb);
 		MBDispose(mb);
 	} else {
-		out->lexemeValue = CreateBoolean(env, false);
+		out->lexemeValue = FalseSymbol(env);
 	}
 }
 
@@ -608,7 +608,7 @@ static void clips_tcl_SplitList(
 		MBDispose(mb);
 		Tcl_Free((void *) argv);
 	} else {
-		out->lexemeValue = CreateBoolean(env, false);
+		out->lexemeValue = FalseSymbol(env);
 	}
 }
 
