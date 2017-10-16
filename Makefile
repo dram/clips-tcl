@@ -1,10 +1,18 @@
+OS = $(shell uname -s)
+
+ifeq ($(OS), Darwin)
+OS = Darwin
+else
+OS = Linux
+endif
+
 all:
-	make PLATFORM=Linux -C sources/clips libclips.a main.o
-	make PLATFORM=Linux -C sources clips-tcl
+	$(MAKE) PLATFORM=$(OS) -C sources/clips libclips.a main.o
+	$(MAKE) PLATFORM=$(OS) -C sources clips-tcl
 
 shell:
 	@ sources/clips-tcl
 
 clean:
-	make -C sources/clips clean
-	make -C sources clean-clips-tcl
+	$(MAKE) -C sources/clips clean
+	$(MAKE) -C sources clean-clips-tcl
