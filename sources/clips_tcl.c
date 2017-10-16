@@ -584,6 +584,19 @@ static void clips_tcl_OpenCommandChannel(
 	genfree(env, argvContents, argvContentsSize);
 }
 
+static void clips_tcl_RegisterChannel(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue channel;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &channel);
+
+	Tcl_RegisterChannel(interp.externalAddressValue->contents,
+			    channel.externalAddressValue->contents);
+}
+
 static void clips_tcl_SplitList(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -791,6 +804,13 @@ void UserFunctions(Environment *env)
 	       "e", 3, 3, ";e;m;y",
 	       clips_tcl_OpenCommandChannel,
 	       "clips_tcl_OpenCommandChannel",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-register-channel",
+	       "v", 2, 2, ";e;e",
+	       clips_tcl_RegisterChannel,
+	       "clips_tcl_RegisterChannel",
 	       NULL);
 
 	AddUDF(env,
