@@ -340,8 +340,6 @@ static void clips_Tcl_FSCreateDirectory(
 
 	int r = Tcl_FSCreateDirectory(pathPtr.externalAddressValue->contents);
 
-	out->integerValue = CreateInteger(env, r);
-
 	switch (r) {
 	case TCL_OK:
 		out->lexemeValue = TrueSymbol(env);
