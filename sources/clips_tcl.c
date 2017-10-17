@@ -80,6 +80,60 @@ static void clips_Tcl_DeleteInterp(
 	Tcl_DeleteInterp(interp.externalAddressValue->contents);
 }
 
+static void clips_Tcl_DoOneEvent(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue flags;
+
+	UDFNthArgument(udfc, 1, SYMBOL_BIT, &flags);
+
+	int flagsContents = 0;
+	const char *p = flags.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
+
+		if (!*++p)
+			break;
+
+		switch (*p) {
+		case 'a':
+			assert(strncmp(p, "all-events", 10) == 0);
+			flagsContents |= TCL_ALL_EVENTS;
+			p += 10;
+			break;
+		case 'd':
+			assert(strncmp(p, "dont-wait", 9) == 0);
+			flagsContents |= TCL_DONT_WAIT;
+			p += 9;
+			break;
+		case 'f':
+			assert(strncmp(p, "file-events", 11) == 0);
+			flagsContents |= TCL_FILE_EVENTS;
+			p += 11;
+			break;
+		case 'i':
+			assert(strncmp(p, "idle-events", 11) == 0);
+			flagsContents |= TCL_IDLE_EVENTS;
+			p += 11;
+			break;
+		case 't':
+			assert(strncmp(p, "timer-events", 12) == 0);
+			flagsContents |= TCL_TIMER_EVENTS;
+			p += 12;
+			break;
+		case 'w':
+			assert(strncmp(p, "window-events", 13) == 0);
+			flagsContents |= TCL_WINDOW_EVENTS;
+			p += 13;
+			break;
+		default:
+			assert(false);
+		}
+	}
+
+	out->integerValue = CreateInteger(env, Tcl_DoOneEvent(flagsContents));
+}
+
 static void clips_Tcl_EvalEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -638,6 +692,44 @@ static void clips_Tcl_OpenCommandChannel(
 	genfree(env, argvContents, argvContentsSize);
 }
 
+static void clips_Tcl_OpenTcpClient(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue port;
+	UDFValue host;
+	UDFValue myaddr;
+	UDFValue myport;
+	UDFValue async;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, INTEGER_BIT, &port);
+	UDFNthArgument(udfc, 3, STRING_BIT, &host);
+	UDFNthArgument(udfc, 4, LEXEME_BITS, &myaddr);
+	UDFNthArgument(udfc, 5, INTEGER_BIT, &myport);
+	UDFNthArgument(udfc, 6, SYMBOL_BIT, &async);
+
+	bool asyncContents = (async.value == TrueSymbol(env));
+
+	const char *myaddrContents;
+	if (myaddr.header->type == SYMBOL_TYPE) {
+		assert(myaddr.value == FalseSymbol(env));
+		myaddrContents = NULL;
+	} else {
+		myaddrContents = myaddr.lexemeValue->contents;
+	}
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_OpenTcpClient(interp.externalAddressValue->contents,
+				  port.integerValue->contents,
+				  host.lexemeValue->contents,
+				  myaddrContents,
+				  myport.integerValue->contents,
+				  asyncContents),
+		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+}
+
 static void clips_Tcl_RegisterChannel(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -732,6 +824,13 @@ void UserFunctions(Environment *env)
 	       "v", 1, 1, ";e",
 	       clips_Tcl_DeleteInterp,
 	       "clips_Tcl_DeleteInterp",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-do-one-event",
+	       "l", 1, 1, ";y",
+	       clips_Tcl_DoOneEvent,
+	       "clips_Tcl_DoOneEvent",
 	       NULL);
 
 	AddUDF(env,
@@ -872,6 +971,13 @@ void UserFunctions(Environment *env)
 	       "e", 3, 3, ";e;m;y",
 	       clips_Tcl_OpenCommandChannel,
 	       "clips_Tcl_OpenCommandChannel",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-open-tcp-client",
+	       "e", 6, 6, ";e;l;s;bs;l;b",
+	       clips_Tcl_OpenTcpClient,
+	       "clips_Tcl_OpenTcpClient",
 	       NULL);
 
 	AddUDF(env,
