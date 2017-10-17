@@ -317,9 +317,18 @@ static void clips_Tcl_Flush(
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
 
-	out->integerValue = CreateInteger(
-		env,
-		Tcl_Flush(channel.externalAddressValue->contents));
+	int r = Tcl_Flush(channel.externalAddressValue->contents);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = TrueSymbol(env);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = FalseSymbol(env);
+		break;
+	default:
+		assert(false);
+	}
 }
 
 static void clips_Tcl_FSCreateDirectory(
@@ -855,7 +864,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-flush",
-	       "l", 1, 1, ";e",
+	       "b", 1, 1, ";e",
 	       clips_Tcl_Flush,
 	       "clips_Tcl_Flush",
 	       NULL);
