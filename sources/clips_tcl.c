@@ -266,6 +266,52 @@ static void clips_Tcl_Flush(
 		Tcl_Flush(channel.externalAddressValue->contents));
 }
 
+static void clips_Tcl_FSCreateDirectory(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue pathPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &pathPtr);
+
+	int r = Tcl_FSCreateDirectory(pathPtr.externalAddressValue->contents);
+
+	out->integerValue = CreateInteger(env, r);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = TrueSymbol(env);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = FalseSymbol(env);
+		break;
+	default:
+		assert(false);
+	}
+}
+
+static void clips_Tcl_FSRemoveDirectory(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue pathPtr;
+	UDFValue recursive;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &pathPtr);
+	UDFNthArgument(udfc, 2, SYMBOL_BIT, &recursive);
+
+	bool recursiveContents = (
+		strcmp(recursive.lexemeValue->contents, "TRUE") == 0);
+
+	Tcl_Obj *obj = Tcl_NewObj();
+	int r = Tcl_FSRemoveDirectory(pathPtr.externalAddressValue->contents,
+				      recursiveContents,
+				      &obj);
+
+	if (r == TCL_OK)
+		out->lexemeValue = TrueSymbol(env);
+	else
+		out->lexemeValue = CreateString(env, Tcl_GetString(obj));
+}
+
 static void clips_Tcl_FSStat(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -706,6 +752,20 @@ void UserFunctions(Environment *env)
 	       "l", 1, 1, ";e",
 	       clips_Tcl_Flush,
 	       "clips_Tcl_Flush",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-fs-create-directory",
+	       "b", 1, 1, ";e",
+	       clips_Tcl_FSCreateDirectory,
+	       "clips_Tcl_FSCreateDirectory",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-fs-remove-directory",
+	       "bs", 2, 2, ";e;b",
+	       clips_Tcl_FSRemoveDirectory,
+	       "clips_Tcl_FSRemoveDirectory",
 	       NULL);
 
 	AddUDF(env,
