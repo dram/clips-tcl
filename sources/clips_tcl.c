@@ -354,8 +354,7 @@ static void clips_Tcl_FSRemoveDirectory(
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &pathPtr);
 	UDFNthArgument(udfc, 2, SYMBOL_BIT, &recursive);
 
-	bool recursiveContents = (
-		strcmp(recursive.lexemeValue->contents, "TRUE") == 0);
+	bool recursiveContents = (recursive.value == TrueSymbol(env));
 
 	Tcl_Obj *obj = Tcl_NewObj();
 	int r = Tcl_FSRemoveDirectory(pathPtr.externalAddressValue->contents,
