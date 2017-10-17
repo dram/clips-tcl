@@ -206,8 +206,10 @@ static void clips_Tcl_EvalObjv(
 	size_t objvContentsSize = objc * sizeof (Tcl_Obj *);
 	Tcl_Obj **objvContents = genalloc(env, objvContentsSize);
 	CLIPSValue *fields = objv.multifieldValue->contents;
-	for (int i = 0; i < objc; ++i)
+	for (int i = 0; i < objc; ++i) {
+		assert(fields[i].header->type == EXTERNAL_ADDRESS_TYPE);
 		objvContents[i] = fields[i].externalAddressValue->contents;
+	}
 
 	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -501,8 +503,10 @@ static void clips_Tcl_Merge(
 	size_t argvContentsSize = argc * sizeof (const char *);
 	const char **argvContents = genalloc(env, argvContentsSize);
 	CLIPSValue *fields = argv.multifieldValue->contents;
-	for (int i = 0; i < argc; ++i)
+	for (int i = 0; i < argc; ++i) {
+		assert(fields[i].header->type == STRING_TYPE);
 		argvContents[i] = fields[i].lexemeValue->contents;
+	}
 
 	char *r = Tcl_Merge(argc, argvContents);
 	out->lexemeValue = CreateString(env, r);
@@ -523,8 +527,10 @@ static void clips_Tcl_NewListObj(
 	size_t objvContentsSize = objc * sizeof (Tcl_Obj *);
 	Tcl_Obj **objvContents = genalloc(env, objvContentsSize);
 	CLIPSValue *fields = objv.multifieldValue->contents;
-	for (int i = 0; i < objc; ++i)
+	for (int i = 0; i < objc; ++i) {
+		assert(fields[i].header->type == EXTERNAL_ADDRESS_TYPE);
 		objvContents[i] = fields[i].externalAddressValue->contents;
+	}
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
@@ -574,8 +580,10 @@ static void clips_Tcl_OpenCommandChannel(
 	size_t argvContentsSize = argc * sizeof (const char *);
 	const char **argvContents = genalloc(env, argvContentsSize);
 	CLIPSValue *fields = argv.multifieldValue->contents;
-	for (int i = 0; i < argc; ++i)
+	for (int i = 0; i < argc; ++i) {
+		assert(fields[i].header->type == STRING_TYPE);
 		argvContents[i] = fields[i].lexemeValue->contents;
+	}
 
 	int flagsValue = 0;
 	const char *p = flags.lexemeValue->contents;
