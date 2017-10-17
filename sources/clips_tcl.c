@@ -147,7 +147,7 @@ static void clips_Tcl_EvalEx(
 
 	int numBytes = strlen(script.lexemeValue->contents);
 
-	int flagsValue = 0;
+	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -160,12 +160,12 @@ static void clips_Tcl_EvalEx(
 		switch (*p) {
 		case 'd':
 			assert(strncmp(p, "direct", 6) == 0);
-			flagsValue |= TCL_EVAL_DIRECT;
+			flagsContents |= TCL_EVAL_DIRECT;
 			p += 6;
 			break;
 		case 'g':
 			assert(strncmp(p, "global", 6) == 0);
-			flagsValue |= TCL_EVAL_GLOBAL;
+			flagsContents |= TCL_EVAL_GLOBAL;
 			p += 6;
 			break;
 		default:
@@ -176,7 +176,7 @@ static void clips_Tcl_EvalEx(
 	int r = Tcl_EvalEx(interp.externalAddressValue->contents,
 			   script.externalAddressValue->contents,
 			   numBytes,
-			   flagsValue);
+			   flagsContents);
 
 	switch (r) {
 	case TCL_OK:
@@ -201,7 +201,7 @@ static void clips_Tcl_EvalObjEx(
 	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
 	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
-	int flagsValue = 0;
+	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -214,12 +214,12 @@ static void clips_Tcl_EvalObjEx(
 		switch (*p) {
 		case 'd':
 			assert(strncmp(p, "direct", 6) == 0);
-			flagsValue |= TCL_EVAL_DIRECT;
+			flagsContents |= TCL_EVAL_DIRECT;
 			p += 6;
 			break;
 		case 'g':
 			assert(strncmp(p, "global", 6) == 0);
-			flagsValue |= TCL_EVAL_GLOBAL;
+			flagsContents |= TCL_EVAL_GLOBAL;
 			p += 6;
 			break;
 		default:
@@ -229,7 +229,7 @@ static void clips_Tcl_EvalObjEx(
 
 	int r = Tcl_EvalObjEx(interp.externalAddressValue->contents,
 			      objPtr.externalAddressValue->contents,
-			      flagsValue);
+			      flagsContents);
 
 	switch (r) {
 	case TCL_OK:
@@ -265,7 +265,7 @@ static void clips_Tcl_EvalObjv(
 		objvContents[i] = fields[i].externalAddressValue->contents;
 	}
 
-	int flagsValue = 0;
+	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -278,12 +278,12 @@ static void clips_Tcl_EvalObjv(
 		switch (*p) {
 		case 'd':
 			assert(strncmp(p, "direct", 6) == 0);
-			flagsValue |= TCL_EVAL_DIRECT;
+			flagsContents |= TCL_EVAL_DIRECT;
 			p += 6;
 			break;
 		case 'g':
 			assert(strncmp(p, "global", 6) == 0);
-			flagsValue |= TCL_EVAL_GLOBAL;
+			flagsContents |= TCL_EVAL_GLOBAL;
 			p += 6;
 			break;
 		default:
@@ -294,7 +294,7 @@ static void clips_Tcl_EvalObjv(
 	int r = Tcl_EvalObjv(interp.externalAddressValue->contents,
 			     objc,
 			     objvContents,
-			     flagsValue);
+			     flagsContents);
 
 	switch (r) {
 	case TCL_OK:
@@ -443,7 +443,7 @@ static void clips_Tcl_GetVar(
 	UDFNthArgument(udfc, 2, STRING_BIT, &varName);
 	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
-	int flagsValue = 0;
+	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -454,23 +454,23 @@ static void clips_Tcl_GetVar(
 		switch (*p) {
 		case 'a':
 			assert(strncmp(p, "append-value", 12) == 0);
-			flagsValue |= TCL_APPEND_VALUE;
+			flagsContents |= TCL_APPEND_VALUE;
 			p += 12;
 			break;
 		case 'g':
 			assert(strncmp(p, "global-only", 11) == 0);
-			flagsValue |= TCL_GLOBAL_ONLY;
+			flagsContents |= TCL_GLOBAL_ONLY;
 			p += 11;
 			break;
 		case 'l':
 			switch (*p) {
 			case 'e':
 				assert(strncmp(p, "leave-err-msg", 13) == 0);
-				flagsValue |= TCL_LEAVE_ERR_MSG;
+				flagsContents |= TCL_LEAVE_ERR_MSG;
 				p += 13;
 			case 'i':
 				assert(strncmp(p, "list-element", 12) == 0);
-				flagsValue |= TCL_LIST_ELEMENT;
+				flagsContents |= TCL_LIST_ELEMENT;
 				p += 12;
 			default:
 				assert(false);
@@ -484,7 +484,7 @@ static void clips_Tcl_GetVar(
 		env,
 		Tcl_GetVar(interp.externalAddressValue->contents,
 			   varName.lexemeValue->contents,
-			   flagsValue));
+			   flagsContents));
 }
 
 static void clips_Tcl_GetsObj(
@@ -638,7 +638,7 @@ static void clips_Tcl_OpenCommandChannel(
 		argvContents[i] = fields[i].lexemeValue->contents;
 	}
 
-	int flagsValue = 0;
+	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
 	while (true) {
 		assert(*p == '/');
@@ -649,7 +649,7 @@ static void clips_Tcl_OpenCommandChannel(
 		switch (*p) {
 		case 'e':
 			assert(strncmp(p, "enforce-mode", 12) == 0);
-			flagsValue |= TCL_ENFORCE_MODE;
+			flagsContents |= TCL_ENFORCE_MODE;
 			p += 12;
 			break;
 		case 's':
@@ -658,17 +658,17 @@ static void clips_Tcl_OpenCommandChannel(
 			switch (*p) {
 			case 'e':
 				assert(strncmp(p, "err", 3) == 0);
-				flagsValue |= TCL_STDERR;
+				flagsContents |= TCL_STDERR;
 				p += 3;
 				break;
 			case 'i':
 				assert(strncmp(p, "in", 2) == 0);
-				flagsValue |= TCL_STDIN;
+				flagsContents |= TCL_STDIN;
 				p += 2;
 				break;
 			case 'o':
 				assert(strncmp(p, "out", 3) == 0);
-				flagsValue |= TCL_STDOUT;
+				flagsContents |= TCL_STDOUT;
 				p += 3;
 				break;
 			default:
@@ -685,7 +685,7 @@ static void clips_Tcl_OpenCommandChannel(
 		Tcl_OpenCommandChannel(interp.externalAddressValue->contents,
 				       argc,
 				       argvContents,
-				       flagsValue),
+				       flagsContents),
 		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 
 	genfree(env, argvContents, argvContentsSize);
