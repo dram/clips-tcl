@@ -27,7 +27,7 @@ enum {
 	CLIPS_TCL_STAT_BUF_EXTERNAL_ADDRESS
 };
 
-static void clips_tcl_AllocStatBuf(
+static void clips_Tcl_AllocStatBuf(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	out->externalAddressValue = CreateExternalAddress(
@@ -36,7 +36,7 @@ static void clips_tcl_AllocStatBuf(
 		CLIPS_TCL_STAT_BUF_EXTERNAL_ADDRESS);
 }
 
-static void clips_tcl_Close(
+static void clips_Tcl_Close(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -51,7 +51,7 @@ static void clips_tcl_Close(
 			  channel.externalAddressValue->contents));
 }
 
-static void clips_tcl_CreateInterp(
+static void clips_Tcl_CreateInterp(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	out->externalAddressValue = CreateExternalAddress(
@@ -60,7 +60,7 @@ static void clips_tcl_CreateInterp(
 		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
 }
 
-static void clips_tcl_DecrRefCount(
+static void clips_Tcl_DecrRefCount(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue objPtr;
@@ -70,7 +70,7 @@ static void clips_tcl_DecrRefCount(
 	Tcl_DecrRefCount((Tcl_Obj *) objPtr.externalAddressValue->contents);
 }
 
-static void clips_tcl_DeleteInterp(
+static void clips_Tcl_DeleteInterp(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -80,7 +80,7 @@ static void clips_tcl_DeleteInterp(
 	Tcl_DeleteInterp(interp.externalAddressValue->contents);
 }
 
-static void clips_tcl_EvalEx(
+static void clips_Tcl_EvalEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -136,7 +136,7 @@ static void clips_tcl_EvalEx(
 	}
 
 }
-static void clips_tcl_EvalObjEx(
+static void clips_Tcl_EvalObjEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -190,7 +190,7 @@ static void clips_tcl_EvalObjEx(
 
 }
 
-static void clips_tcl_EvalObjv(
+static void clips_Tcl_EvalObjv(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -254,7 +254,7 @@ static void clips_tcl_EvalObjv(
 	genfree(env, objvContents, objvContentsSize);
 }
 
-static void clips_tcl_Flush(
+static void clips_Tcl_Flush(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue channel;
@@ -266,7 +266,7 @@ static void clips_tcl_Flush(
 		Tcl_Flush(channel.externalAddressValue->contents));
 }
 
-static void clips_tcl_FSStat(
+static void clips_Tcl_FSStat(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue pathPtr;
@@ -281,7 +281,7 @@ static void clips_tcl_FSStat(
 			   statPtr.externalAddressValue->contents));
 }
 
-static void clips_tcl_GetModificationTimeFromStat(
+static void clips_Tcl_GetModificationTimeFromStat(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue statPtr;
@@ -294,7 +294,7 @@ static void clips_tcl_GetModificationTimeFromStat(
 			statPtr.externalAddressValue->contents));
 }
 
-static void clips_tcl_GetObjResult(
+static void clips_Tcl_GetObjResult(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -307,7 +307,7 @@ static void clips_tcl_GetObjResult(
 		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
 }
 
-static void clips_tcl_GetString(
+static void clips_Tcl_GetString(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue objPtr;
@@ -319,7 +319,7 @@ static void clips_tcl_GetString(
 		Tcl_GetString(objPtr.externalAddressValue->contents));
 }
 
-static void clips_tcl_GetStringResult(
+static void clips_Tcl_GetStringResult(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -331,7 +331,7 @@ static void clips_tcl_GetStringResult(
 		Tcl_GetStringResult(interp.externalAddressValue->contents));
 }
 
-static void clips_tcl_GetVar(
+static void clips_Tcl_GetVar(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -386,7 +386,7 @@ static void clips_tcl_GetVar(
 			   flagsValue));
 }
 
-static void clips_tcl_GetsObj(
+static void clips_Tcl_GetsObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue channel;
@@ -401,7 +401,7 @@ static void clips_tcl_GetsObj(
 			    lineObjPtr.externalAddressValue->contents));
 }
 
-static void clips_tcl_IncrRefCount(
+static void clips_Tcl_IncrRefCount(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue objPtr;
@@ -411,7 +411,7 @@ static void clips_tcl_IncrRefCount(
 	Tcl_IncrRefCount((Tcl_Obj *) objPtr.externalAddressValue->contents);
 }
 
-static void clips_tcl_ListObjGetElements(
+static void clips_Tcl_ListObjGetElements(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -443,7 +443,7 @@ static void clips_tcl_ListObjGetElements(
 	}
 }
 
-static void clips_tcl_Merge(
+static void clips_Tcl_Merge(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue argv;
@@ -465,7 +465,7 @@ static void clips_tcl_Merge(
 	genfree(env, argvContents, argvContentsSize);
 }
 
-static void clips_tcl_NewListObj(
+static void clips_Tcl_NewListObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue objv;
@@ -488,7 +488,7 @@ static void clips_tcl_NewListObj(
 	genfree(env, objvContents, objvContentsSize);
 }
 
-static void clips_tcl_NewObj(
+static void clips_Tcl_NewObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	out->externalAddressValue = CreateExternalAddress(
@@ -497,7 +497,7 @@ static void clips_tcl_NewObj(
 		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
 }
 
-static void clips_tcl_NewStringObj(
+static void clips_Tcl_NewStringObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue bytes;
@@ -512,7 +512,7 @@ static void clips_tcl_NewStringObj(
 		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
 }
 
-static void clips_tcl_OpenCommandChannel(
+static void clips_Tcl_OpenCommandChannel(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -584,7 +584,7 @@ static void clips_tcl_OpenCommandChannel(
 	genfree(env, argvContents, argvContentsSize);
 }
 
-static void clips_tcl_RegisterChannel(
+static void clips_Tcl_RegisterChannel(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -597,7 +597,7 @@ static void clips_tcl_RegisterChannel(
 			    channel.externalAddressValue->contents);
 }
 
-static void clips_tcl_SplitList(
+static void clips_Tcl_SplitList(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue interp;
@@ -625,7 +625,7 @@ static void clips_tcl_SplitList(
 	}
 }
 
-static void clips_tcl_WriteChars(
+static void clips_Tcl_WriteChars(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue channel;
@@ -648,182 +648,182 @@ void UserFunctions(Environment *env)
 	AddUDF(env,
 	       "tcl-alloc-stat-buf",
 	       "e", 0, 0, "",
-	       clips_tcl_AllocStatBuf,
-	       "clips_tcl_AllocStatBuf",
+	       clips_Tcl_AllocStatBuf,
+	       "clips_Tcl_AllocStatBuf",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-close",
 	       "l", 2, 2, ";e;e",
-	       clips_tcl_Close,
-	       "clips_tcl_Close",
+	       clips_Tcl_Close,
+	       "clips_Tcl_Close",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-create-interp",
 	       "e", 0, 0, "",
-	       clips_tcl_CreateInterp,
-	       "clips_tcl_CreateInterp",
+	       clips_Tcl_CreateInterp,
+	       "clips_Tcl_CreateInterp",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-decr-ref-count",
 	       "v", 1, 1, ";e",
-	       clips_tcl_DecrRefCount,
-	       "clips_tcl_DecrRefCount",
+	       clips_Tcl_DecrRefCount,
+	       "clips_Tcl_DecrRefCount",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-delete-interp",
 	       "v", 1, 1, ";e",
-	       clips_tcl_DeleteInterp,
-	       "clips_tcl_DeleteInterp",
+	       clips_Tcl_DeleteInterp,
+	       "clips_Tcl_DeleteInterp",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-ex",
 	       "bl", 3, 3, ";e;s;y",
-	       clips_tcl_EvalEx,
-	       "clips_tcl_EvalEx",
+	       clips_Tcl_EvalEx,
+	       "clips_Tcl_EvalEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-obj-ex",
 	       "bl", 3, 3, ";e;e;y",
-	       clips_tcl_EvalObjEx,
-	       "clips_tcl_EvalObjEx",
+	       clips_Tcl_EvalObjEx,
+	       "clips_Tcl_EvalObjEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-objv",
 	       "bl", 3, 3, ";e;m;y",
-	       clips_tcl_EvalObjv,
-	       "clips_tcl_EvalObjv",
+	       clips_Tcl_EvalObjv,
+	       "clips_Tcl_EvalObjv",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-flush",
 	       "l", 1, 1, ";e",
-	       clips_tcl_Flush,
-	       "clips_tcl_Flush",
+	       clips_Tcl_Flush,
+	       "clips_Tcl_Flush",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-fs-stat",
 	       "l", 2, 2, ";e;e",
-	       clips_tcl_FSStat,
-	       "clips_tcl_FSStat",
+	       clips_Tcl_FSStat,
+	       "clips_Tcl_FSStat",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-modification-time-from-stat",
 	       "l", 1, 1, ";e",
-	       clips_tcl_GetModificationTimeFromStat,
-	       "clips_tcl_GetModificationTimeFromStat",
+	       clips_Tcl_GetModificationTimeFromStat,
+	       "clips_Tcl_GetModificationTimeFromStat",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-obj-result",
 	       "e", 1, 1, ";e",
-	       clips_tcl_GetObjResult,
-	       "clips_tcl_GetObjResult",
+	       clips_Tcl_GetObjResult,
+	       "clips_Tcl_GetObjResult",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-string",
 	       "s", 1, 1, ";e",
-	       clips_tcl_GetString,
-	       "clips_tcl_GetString",
+	       clips_Tcl_GetString,
+	       "clips_Tcl_GetString",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-string-result",
 	       "s", 1, 1, ";e",
-	       clips_tcl_GetStringResult,
-	       "clips_tcl_GetStringResult",
+	       clips_Tcl_GetStringResult,
+	       "clips_Tcl_GetStringResult",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-get-var",
 	       "s", 3, 3, ";e;s;y",
-	       clips_tcl_GetVar,
-	       "clips_tcl_GetVar",
+	       clips_Tcl_GetVar,
+	       "clips_Tcl_GetVar",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-gets-obj",
 	       "l", 2, 2, ";e;e",
-	       clips_tcl_GetsObj,
-	       "clips_tcl_GetsObj",
+	       clips_Tcl_GetsObj,
+	       "clips_Tcl_GetsObj",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-incr-ref-count",
 	       "v", 1, 1, ";e",
-	       clips_tcl_IncrRefCount,
-	       "clips_tcl_IncrRefCount",
+	       clips_Tcl_IncrRefCount,
+	       "clips_Tcl_IncrRefCount",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-list-obj-get-elements",
 	       "bm", 2, 2, ";e;e",
-	       clips_tcl_ListObjGetElements,
-	       "clips_tcl_ListObjGetElements",
+	       clips_Tcl_ListObjGetElements,
+	       "clips_Tcl_ListObjGetElements",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-merge",
 	       "s", 1, 1, ";m",
-	       clips_tcl_Merge,
-	       "clips_tcl_Merge",
+	       clips_Tcl_Merge,
+	       "clips_Tcl_Merge",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-new-list-obj",
 	       "e", 1, 1, ";m",
-	       clips_tcl_NewListObj,
-	       "clips_tcl_NewListObj",
+	       clips_Tcl_NewListObj,
+	       "clips_Tcl_NewListObj",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-new-obj",
 	       "e", 0, 0, "",
-	       clips_tcl_NewObj,
-	       "clips_tcl_NewObj",
+	       clips_Tcl_NewObj,
+	       "clips_Tcl_NewObj",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-new-string-obj",
 	       "e", 1, 1, ";s",
-	       clips_tcl_NewStringObj,
-	       "clips_tcl_NewStringObj",
+	       clips_Tcl_NewStringObj,
+	       "clips_Tcl_NewStringObj",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-open-command-channel",
 	       "e", 3, 3, ";e;m;y",
-	       clips_tcl_OpenCommandChannel,
-	       "clips_tcl_OpenCommandChannel",
+	       clips_Tcl_OpenCommandChannel,
+	       "clips_Tcl_OpenCommandChannel",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-register-channel",
 	       "v", 2, 2, ";e;e",
-	       clips_tcl_RegisterChannel,
-	       "clips_tcl_RegisterChannel",
+	       clips_Tcl_RegisterChannel,
+	       "clips_Tcl_RegisterChannel",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-split-list",
 	       "bm", 2, 2, ";e;s",
-	       clips_tcl_SplitList,
-	       "clips_tcl_SplitList",
+	       clips_Tcl_SplitList,
+	       "clips_Tcl_SplitList",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-write-chars",
 	       "l", 2, 2, ";e;s",
-	       clips_tcl_WriteChars,
-	       "clips_tcl_WriteChars",
+	       clips_Tcl_WriteChars,
+	       "clips_Tcl_WriteChars",
 	       NULL);
 }
