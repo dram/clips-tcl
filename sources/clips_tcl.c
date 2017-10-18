@@ -415,6 +415,34 @@ static void clips_Tcl_GetObjResult(
 		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
 }
 
+static void clips_Tcl_GetReturnOptions(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue code;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, BOOLEAN_BIT | INTEGER_BIT, &code);
+
+	int codeContents;
+	if (code.header->type == SYMBOL_TYPE) {
+		if (code.value == TrueSymbol(env))
+			codeContents = TCL_OK;
+		else if (code.value == FalseSymbol(env))
+			codeContents = TCL_ERROR;
+		else
+			assert(false);
+	} else {
+		codeContents = code.integerValue->contents;
+	}
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_GetReturnOptions(interp.externalAddressValue->contents,
+				     codeContents),
+		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
+}
+
 static void clips_Tcl_GetString(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -826,6 +854,36 @@ static void clips_Tcl_RegisterChannel(
 			    channel.externalAddressValue->contents);
 }
 
+static void clips_Tcl_SetChannelOption(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue channel;
+	UDFValue optionName;
+	UDFValue newValue;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &channel);
+	UDFNthArgument(udfc, 3, STRING_BIT, &optionName);
+	UDFNthArgument(udfc, 4, STRING_BIT, &newValue);
+
+	int r = Tcl_SetChannelOption(interp.externalAddressValue->contents,
+				     channel.externalAddressValue->contents,
+				     optionName.lexemeValue->contents,
+				     newValue.lexemeValue->contents);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = TrueSymbol(env);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = FalseSymbol(env);
+		break;
+	default:
+		assert(false);
+	}
+}
+
 static void clips_Tcl_SplitList(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -980,6 +1038,13 @@ void UserFunctions(Environment *env)
 	       NULL);
 
 	AddUDF(env,
+	       "tcl-get-return-options",
+	       "e", 2, 2, ";e;bl",
+	       clips_Tcl_GetReturnOptions,
+	       "clips_Tcl_GetReturnOptions",
+	       NULL);
+
+	AddUDF(env,
 	       "tcl-get-string",
 	       "s", 1, 1, ";e",
 	       clips_Tcl_GetString,
@@ -1075,6 +1140,13 @@ void UserFunctions(Environment *env)
 	       "v", 2, 2, ";e;e",
 	       clips_Tcl_RegisterChannel,
 	       "clips_Tcl_RegisterChannel",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-set-channel-option",
+	       "l", 4, 4, ";e;e;s;s",
+	       clips_Tcl_SetChannelOption,
+	       "clips_Tcl_SetChannelOption",
 	       NULL);
 
 	AddUDF(env,
