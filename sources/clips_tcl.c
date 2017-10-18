@@ -359,7 +359,7 @@ static void clips_Tcl_FSRemoveDirectory(
 	UDFValue recursive;
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &pathPtr);
-	UDFNthArgument(udfc, 2, SYMBOL_BIT, &recursive);
+	UDFNthArgument(udfc, 2, BOOLEAN_BIT, &recursive);
 
 	bool recursiveContents = (recursive.value == TrueSymbol(env));
 
@@ -711,9 +711,9 @@ static void clips_Tcl_OpenTcpClient(
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, INTEGER_BIT, &port);
 	UDFNthArgument(udfc, 3, STRING_BIT, &host);
-	UDFNthArgument(udfc, 4, LEXEME_BITS, &myaddr);
+	UDFNthArgument(udfc, 4, BOOLEAN_BIT | STRING_BIT, &myaddr);
 	UDFNthArgument(udfc, 5, INTEGER_BIT, &myport);
-	UDFNthArgument(udfc, 6, SYMBOL_BIT, &async);
+	UDFNthArgument(udfc, 6, BOOLEAN_BIT, &async);
 
 	bool asyncContents = (async.value == TrueSymbol(env));
 
