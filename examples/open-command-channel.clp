@@ -1,3 +1,6 @@
+(deffunction tcl/run-process (?interp ?command)
+  (tcl-close ?interp (tcl-open-command-channel ?interp ?command /)))
+
 (defrule main
  =>
   (bind ?interp (tcl-create-interp))
@@ -7,6 +10,8 @@
                                            (create$ "sleep" "2")
                                            /))
   (tcl-close ?interp ?channel)
+
+  (tcl/run-process ?interp (create$ "echo" "Hello, world."))
 
   ;; redirect input
   (bind ?channel (tcl-open-command-channel ?interp
