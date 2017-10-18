@@ -736,6 +736,83 @@ static void clips_Tcl_OpenTcpClient(
 		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 }
 
+static void clips_Tcl_TcpAcceptProc(
+	ClientData clientData, Tcl_Channel channel, char *hostName, int port)
+{
+	Environment *env = ((void **) clientData)[0];
+	CLIPSLexeme *functionValue = ((void **) clientData)[1];
+
+	const int argc = 4;
+	void *argv[argc];
+	argv[0] = ((void **) clientData)[2];
+	argv[1] = CreateExternalAddress(
+		env, channel, CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+	argv[2] = CreateString(env, hostName);
+	argv[3] = CreateInteger(env, port);
+
+	Expression reference;
+	GetFunctionReference(env, functionValue->contents, &reference);
+	ExpressionInstall(env, &reference);
+
+	Expression *p = NULL;
+	for (int i = 0; i < argc; ++i) {
+		Expression *c = GenConstant(
+			env, ((TypeHeader *) argv[i])->type, argv[i]);
+		if (p == NULL)
+			reference.argList = c;
+		else
+			p->nextArg = c;
+		p = c;
+		ExpressionInstall(env, p);
+	}
+
+	UDFValue returnValue;
+	EvaluateExpression(env, &reference, &returnValue);
+	ExpressionDeinstall(env, &reference);
+}
+
+static void clips_Tcl_OpenTcpServer(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue port;
+	UDFValue myaddr;
+	UDFValue proc;
+	UDFValue clientData;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, INTEGER_BIT, &port);
+	UDFNthArgument(udfc, 3, BOOLEAN_BIT | STRING_BIT, &myaddr);
+	UDFNthArgument(udfc, 4, SYMBOL_BIT, &proc);
+	UDFNthArgument(udfc, 5, ANY_TYPE_BITS, &clientData);
+
+	const char *myaddrContents;
+	if (myaddr.header->type == SYMBOL_TYPE) {
+		assert(myaddr.value == FalseSymbol(env));
+		myaddrContents = NULL;
+	} else {
+		myaddrContents = myaddr.lexemeValue->contents;
+	}
+
+	size_t clientDataContentsSize = 3 * sizeof (void *);
+	void **clientDataContents = genalloc(env, clientDataContentsSize);
+	clientDataContents[0] = env;
+	clientDataContents[1] = proc.value;
+	clientDataContents[2] = clientData.value;
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_OpenTcpServer(interp.externalAddressValue->contents,
+				  port.integerValue->contents,
+				  myaddrContents,
+				  clips_Tcl_TcpAcceptProc,
+				  clientDataContents),
+		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+
+	// FIXME: How and when to free `clientDataContents`?
+	// genfree(env, clientDataContents, clientDataContentsSize);
+}
+
 static void clips_Tcl_RegisterChannel(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -984,6 +1061,13 @@ void UserFunctions(Environment *env)
 	       "e", 6, 6, ";e;l;s;bs;l;b",
 	       clips_Tcl_OpenTcpClient,
 	       "clips_Tcl_OpenTcpClient",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-open-tcp-server",
+	       "e", 5, 5, ";e;l;bs;y;*",
+	       clips_Tcl_OpenTcpServer,
+	       "clips_Tcl_OpenTcpServer",
 	       NULL);
 
 	AddUDF(env,
