@@ -51,6 +51,30 @@ static void clips_Tcl_Close(
 			  channel.externalAddressValue->contents));
 }
 
+static void clips_Tcl_Concat(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue argv;
+
+	UDFNthArgument(udfc, 1, MULTIFIELD_BIT, &argv);
+
+	int argc = argv.multifieldValue->length;
+
+	size_t argvContentsSize = argc * sizeof (const char *);
+	const char **argvContents = genalloc(env, argvContentsSize);
+	CLIPSValue *fields = argv.multifieldValue->contents;
+	for (int i = 0; i < argc; ++i) {
+		assert(fields[i].header->type == STRING_TYPE);
+		argvContents[i] = fields[i].lexemeValue->contents;
+	}
+
+	char *r = Tcl_Concat(argc, argvContents);
+	out->lexemeValue = CreateString(env, r);
+	Tcl_Free(r);
+
+	genfree(env, argvContents, argvContentsSize);
+}
+
 static void clips_Tcl_CreateInterp(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -443,6 +467,50 @@ static void clips_Tcl_GetReturnOptions(
 		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
 }
 
+static void clips_Tcl_GetStdChannel(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue type;
+
+	UDFNthArgument(udfc, 1, SYMBOL_BIT, &type);
+
+	int typeContents = 0;
+	const char *p = type.lexemeValue->contents;
+	while (true) {
+		assert(*p == '/');
+
+		if (!*++p)
+			break;
+
+		assert(strncmp(p, "std", 3) == 0);
+		p += 3;
+		switch (*p) {
+		case 'e':
+			assert(strncmp(p, "err", 3) == 0);
+			typeContents |= TCL_STDERR;
+			p += 3;
+			break;
+		case 'i':
+			assert(strncmp(p, "in", 2) == 0);
+			typeContents |= TCL_STDIN;
+			p += 2;
+			break;
+		case 'o':
+			assert(strncmp(p, "out", 3) == 0);
+			typeContents |= TCL_STDOUT;
+			p += 3;
+			break;
+		default:
+			assert(false);
+		}
+	}
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_GetStdChannel(typeContents),
+		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+}
+
 static void clips_Tcl_GetString(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -545,6 +613,34 @@ static void clips_Tcl_IncrRefCount(
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
 
 	Tcl_IncrRefCount((Tcl_Obj *) objPtr.externalAddressValue->contents);
+}
+
+static void clips_Tcl_ListObjAppendElement(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue listPtr;
+	UDFValue objPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &listPtr);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
+
+	int r = Tcl_ListObjAppendElement(
+		interp.externalAddressValue->contents,
+		listPtr.externalAddressValue->contents,
+		objPtr.externalAddressValue->contents);
+
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = TrueSymbol(env);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = FalseSymbol(env);
+		break;
+	default:
+		assert(false);
+	}
 }
 
 static void clips_Tcl_ListObjGetElements(
@@ -930,6 +1026,21 @@ static void clips_Tcl_WriteChars(
 			       bytesToWrite));
 }
 
+static void clips_Tcl_WriteObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue channel;
+	UDFValue writeObjPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &writeObjPtr);
+
+	out->integerValue = CreateInteger(
+		env,
+		Tcl_WriteObj(channel.externalAddressValue->contents,
+			     writeObjPtr.externalAddressValue->contents));
+}
+
 void UserFunctions(Environment *env)
 {
 	AddUDF(env,
@@ -944,6 +1055,13 @@ void UserFunctions(Environment *env)
 	       "l", 2, 2, ";e;e",
 	       clips_Tcl_Close,
 	       "clips_Tcl_Close",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-concat",
+	       "s", 1, 1, ";m",
+	       clips_Tcl_Concat,
+	       "clips_Tcl_Concat",
 	       NULL);
 
 	AddUDF(env,
@@ -1045,6 +1163,13 @@ void UserFunctions(Environment *env)
 	       NULL);
 
 	AddUDF(env,
+	       "tcl-get-std-channel",
+	       "e", 1, 1, ";y",
+	       clips_Tcl_GetStdChannel,
+	       "clips_Tcl_GetStdChannel",
+	       NULL);
+
+	AddUDF(env,
 	       "tcl-get-string",
 	       "s", 1, 1, ";e",
 	       clips_Tcl_GetString,
@@ -1077,6 +1202,13 @@ void UserFunctions(Environment *env)
 	       "v", 1, 1, ";e",
 	       clips_Tcl_IncrRefCount,
 	       "clips_Tcl_IncrRefCount",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-list-obj-append-element",
+	       "b", 3, 3, ";e;e;e",
+	       clips_Tcl_ListObjAppendElement,
+	       "clips_Tcl_ListObjAppendElement",
 	       NULL);
 
 	AddUDF(env,
@@ -1161,5 +1293,12 @@ void UserFunctions(Environment *env)
 	       "l", 2, 2, ";e;s",
 	       clips_Tcl_WriteChars,
 	       "clips_Tcl_WriteChars",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-write-obj",
+	       "l", 2, 2, ";e;e",
+	       clips_Tcl_WriteObj,
+	       "clips_Tcl_WriteObj",
 	       NULL);
 }
