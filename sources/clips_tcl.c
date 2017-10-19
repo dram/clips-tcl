@@ -895,6 +895,12 @@ static void clips_Tcl_TcpAcceptProc(
 	ExpressionDeinstall(env, &reference);
 }
 
+static void clips_Tcl_OpenTcpServerCloseProc(
+	ClientData clientData)
+{
+	Tcl_Free(clientData);
+}
+
 static void clips_Tcl_OpenTcpServer(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -919,22 +925,24 @@ static void clips_Tcl_OpenTcpServer(
 	}
 
 	size_t clientDataContentsSize = 3 * sizeof (void *);
-	void **clientDataContents = genalloc(env, clientDataContentsSize);
+	void **clientDataContents = (void *) Tcl_Alloc(clientDataContentsSize);
 	clientDataContents[0] = env;
 	clientDataContents[1] = proc.value;
 	clientDataContents[2] = clientData.value;
 
-	out->externalAddressValue = CreateExternalAddress(
-		env,
-		Tcl_OpenTcpServer(interp.externalAddressValue->contents,
-				  port.integerValue->contents,
-				  myaddrContents,
-				  clips_Tcl_TcpAcceptProc,
-				  clientDataContents),
-		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+	Tcl_Channel r = Tcl_OpenTcpServer(
+		interp.externalAddressValue->contents,
+		port.integerValue->contents,
+		myaddrContents,
+		clips_Tcl_TcpAcceptProc,
+		clientDataContents);
 
-	// FIXME: How and when to free `clientDataContents`?
-	// genfree(env, clientDataContents, clientDataContentsSize);
+	out->externalAddressValue = CreateExternalAddress(
+		env, r, CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+
+	Tcl_CreateCloseHandler(r,
+			       clips_Tcl_OpenTcpServerCloseProc,
+			       clientDataContents);
 }
 
 static void clips_Tcl_RegisterChannel(

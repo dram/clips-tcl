@@ -13,8 +13,12 @@
                                       "127.0.0.1"
                                       accept-connection
                                       ?interp))
-  (while TRUE
-    (tcl-do-one-event /all-events/))
+
+  (bind ?count 0)
+
+  (while (< ?count 5)
+    (tcl-do-one-event /all-events/)
+    (bind ?count (+ ?count 1)))
 
   (tcl-close ?interp ?channel)
 
