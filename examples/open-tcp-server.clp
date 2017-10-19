@@ -17,7 +17,9 @@
   (bind ?count 0)
 
   (while (< ?count 5)
-    (tcl-do-one-event /all-events/)
+    ;; Use non-block call to make it interruptable (by Ctrl-C),
+    (tcl-do-one-event /all-events/dont-wait/)
+    (tcl-sleep 500)
     (bind ?count (+ ?count 1)))
 
   (tcl-close ?interp ?channel)
