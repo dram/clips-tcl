@@ -18,12 +18,12 @@
         FALSE))
 
 (deffunction tcl/s ($?arguments)
-  (and (bind ?result (tcl (expand$ ?arguments)))
-       (tcl-get-string ?result)))
+  (if (bind ?result (tcl (expand$ ?arguments)))
+   then (tcl-get-string ?result)))
 
 (deffunction tcl/m ($?arguments)
-  (and (bind ?result (tcl (expand$ ?arguments)))
-       (tcl-split-list ?*tcl* (tcl-get-string ?result))))
+  (if (bind ?result (tcl (expand$ ?arguments)))
+   then (tcl-split-list ?*tcl* (tcl-get-string ?result))))
 
 (defrule main
  =>
