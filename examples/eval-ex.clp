@@ -1,15 +1,15 @@
-(deffunction tcl/eval (?interp $?arguments)
-  (tcl-eval-ex ?interp (tcl-merge ?arguments) /))
+(deffunction tcl/eval (?tcl $?arguments)
+  (tcl-eval-ex ?tcl (tcl-merge ?arguments) /))
 
 (defrule main
  =>
-  (bind ?interp (tcl-create-interp))
+  (bind ?tcl (tcl-create-interp))
 
-  (println (tcl-eval-ex ?interp "puts {Hello, world.}" /))
+  (println (tcl-eval-ex ?tcl "puts {Hello, world.}" /))
 
-  (println (tcl/eval ?interp "puts" "Hello, world."))
+  (println (tcl/eval ?tcl "puts" "Hello, world."))
 
-  (tcl-delete-interp ?interp))
+  (tcl-delete-interp ?tcl))
 
 (run)
 

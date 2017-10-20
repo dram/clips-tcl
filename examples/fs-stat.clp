@@ -1,8 +1,8 @@
 (defrule main
  =>
-  ;; Although `?interp` is not used in following code, a call of
+  ;; Although `?tcl` is not used in following code, a call of
   ;; `tcl-create-interp` is needed to trigger `TclInitSubsystems()`.
-  (bind ?interp (tcl-create-interp))
+  (bind ?tcl (tcl-create-interp))
 
   (bind ?path (tcl-new-string-obj "fs-stat.clp"))
 
@@ -14,7 +14,7 @@
    then (println (tcl-get-modification-time-from-stat ?stat)))
   (tcl-decr-ref-count ?path)
 
-  (tcl-delete-interp ?interp))
+  (tcl-delete-interp ?tcl))
 
 (run)
 

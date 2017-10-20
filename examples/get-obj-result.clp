@@ -1,15 +1,15 @@
 (defrule main
  =>
-  (bind ?interp (tcl-create-interp))
+  (bind ?tcl (tcl-create-interp))
 
-  (tcl-eval-objv ?interp
+  (tcl-eval-objv ?tcl
                  (create$ (tcl-new-string-obj "expr")
                           (tcl-new-string-obj "1 + 2"))
                  /)
 
-  (println (tcl-get-string (tcl-get-obj-result ?interp)))
+  (println (tcl-get-string (tcl-get-obj-result ?tcl)))
 
-  (tcl-delete-interp ?interp))
+  (tcl-delete-interp ?tcl))
 
 (run)
 

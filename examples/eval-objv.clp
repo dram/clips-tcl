@@ -1,20 +1,20 @@
-(defglobal ?*interp* = (tcl-create-interp))
+(defglobal ?*tcl* = (tcl-create-interp))
 
 (deffunction tcl ($?arguments)
   (bind ?argument-objs (tcl-new-obj))
   (foreach ?argument ?arguments
-    (tcl-list-obj-append-element ?*interp*
+    (tcl-list-obj-append-element ?*tcl*
                                  ?argument-objs
                                  (tcl-new-string-obj ?argument)))
   (if (eq (bind ?result
-            (tcl-eval-objv ?*interp*
-                           (tcl-list-obj-get-elements ?*interp*
+            (tcl-eval-objv ?*tcl*
+                           (tcl-list-obj-get-elements ?*tcl*
                                                       ?argument-objs)
                            /))
           /ok/)
-   then (tcl-get-obj-result ?*interp*)
+   then (tcl-get-obj-result ?*tcl*)
    else (tcl-write-obj (tcl-get-std-channel /stderr/)
-                       (tcl-get-return-options ?*interp* ?result))
+                       (tcl-get-return-options ?*tcl* ?result))
         FALSE))
 
 (deffunction tcl/s ($?arguments)
@@ -23,11 +23,11 @@
 
 (deffunction tcl/m ($?arguments)
   (and (bind ?result (tcl (expand$ ?arguments)))
-       (tcl-split-list ?*interp* (tcl-get-string ?result))))
+       (tcl-split-list ?*tcl* (tcl-get-string ?result))))
 
 (defrule main
  =>
-  (println (tcl-eval-objv ?*interp*
+  (println (tcl-eval-objv ?*tcl*
                           (create$ (tcl-new-string-obj "puts")
                                    (tcl-new-string-obj "Hello, world."))
                           /))

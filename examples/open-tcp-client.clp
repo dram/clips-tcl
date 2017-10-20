@@ -1,8 +1,8 @@
 (defrule main
  =>
-  (bind ?interp (tcl-create-interp))
+  (bind ?tcl (tcl-create-interp))
 
-  (bind ?channel (tcl-open-tcp-client ?interp
+  (bind ?channel (tcl-open-tcp-client ?tcl
                                       80
                                       "www.example.com"
                                       FALSE
@@ -18,9 +18,9 @@ User-Agent: CLIPS-Tcl
   (tcl-flush ?channel)
   (tcl-gets-obj ?channel (bind ?obj (tcl-new-obj)))
   (println (tcl-get-string ?obj))
-  (tcl-close ?interp ?channel)
+  (tcl-close ?tcl ?channel)
 
-  (tcl-delete-interp ?interp))
+  (tcl-delete-interp ?tcl))
 
 (run)
 
