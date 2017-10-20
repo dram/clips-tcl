@@ -380,6 +380,38 @@ static void clips_Tcl_Flush(
 	}
 }
 
+static void clips_Tcl_Format(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue format;
+	UDFValue objv;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, STRING_BIT, &format);
+	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &objv);
+
+	int objc = objv.multifieldValue->length;
+
+	size_t objvContentsSize = objc * sizeof (Tcl_Obj *);
+	Tcl_Obj **objvContents = genalloc(env, objvContentsSize);
+	CLIPSValue *fields = objv.multifieldValue->contents;
+	for (int i = 0; i < objc; ++i) {
+		assert(fields[i].header->type == EXTERNAL_ADDRESS_TYPE);
+		objvContents[i] = fields[i].externalAddressValue->contents;
+	}
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_Format(interp.externalAddressValue->contents,
+			   format.lexemeValue->contents,
+			   objc,
+			   objvContents),
+		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+
+	genfree(env, objvContents, objvContentsSize);
+}
+
 static void clips_Tcl_FSCreateDirectory(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1187,6 +1219,13 @@ void UserFunctions(Environment *env)
 	       "b", 1, 1, ";e",
 	       clips_Tcl_Flush,
 	       "clips_Tcl_Flush",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-format",
+	       "e", 3, 3, ";e;s;m",
+	       clips_Tcl_Format,
+	       "clips_Tcl_Format",
 	       NULL);
 
 	AddUDF(env,
