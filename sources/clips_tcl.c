@@ -645,7 +645,7 @@ static void clips_Tcl_ListObjAppendElement(
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &listPtr);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 3, EXTERNAL_ADDRESS_BIT, &objPtr);
 
 	int r = Tcl_ListObjAppendElement(
 		interp.externalAddressValue->contents,
