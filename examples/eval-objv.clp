@@ -1,23 +1,29 @@
 (defglobal ?*interp* = (tcl-create-interp))
 
-(deffunction map$ (?function ?fields)
-  (bind ?results (create$))
-  (foreach ?field ?fields
-    (bind ?results ?results (funcall ?function ?field))))
-
 (deffunction tcl ($?arguments)
-  (if (eq /ok/ (bind ?r (tcl-eval-objv ?*interp*
-                                       (map$ tcl-new-string-obj ?arguments)
-                                       /)))
+  (bind ?argument-objs (tcl-new-obj))
+  (foreach ?argument ?arguments
+    (tcl-list-obj-append-element ?*interp*
+                                 ?argument-objs
+                                 (tcl-new-string-obj ?argument)))
+  (if (eq (bind ?result
+            (tcl-eval-objv ?*interp*
+                           (tcl-list-obj-get-elements ?*interp*
+                                                      ?argument-objs)
+                           /))
+          /ok/)
    then (tcl-get-obj-result ?*interp*)
-   else (printout stderr
-                  (tcl-get-string (tcl-get-return-options ?*interp* ?r)))))
+   else (tcl-write-obj (tcl-get-std-channel /stderr/)
+                       (tcl-get-return-options ?*interp* ?result))
+        FALSE))
 
 (deffunction tcl/s ($?arguments)
-  (tcl-get-string (tcl (expand$ ?arguments))))
+  (and (bind ?result (tcl (expand$ ?arguments)))
+       (tcl-get-string ?result)))
 
 (deffunction tcl/m ($?arguments)
-  (tcl-split-list ?*interp* (tcl-get-string (tcl (expand$ ?arguments)))))
+  (and (bind ?result (tcl (expand$ ?arguments)))
+       (tcl-split-list ?*interp* (tcl-get-string ?result))))
 
 (defrule main
  =>
@@ -28,7 +34,7 @@
 
   (println (tcl/s "string" "repeat" "a" "5"))
 
-  (println (tcl/m "split" "a,b,c" ","))))
+  (println (tcl/m "split" "a,b,c" ",")))
 
 (run)
 
