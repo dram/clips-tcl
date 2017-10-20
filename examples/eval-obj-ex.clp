@@ -1,7 +1,7 @@
 (defglobal ?*interp* = (tcl-create-interp))
 
 (deffunction tcl ($?arguments)
-  (if (eq TRUE (bind ?r (tcl-eval-ex ?*interp* (tcl-merge ?arguments) /)))
+  (if (eq /ok/ (bind ?r (tcl-eval-ex ?*interp* (tcl-merge ?arguments) /)))
    then (tcl-get-obj-result ?*interp*)
    else (printout stderr
                   (tcl-get-string (tcl-get-return-options ?*interp* ?r)))))

@@ -16,9 +16,26 @@
 /// 3. As there is no way to count octets in CLIPS, so we count it in
 ///    C side (e.g. Tcl_NewStringObj).
 /// 4. Several API in Tcl will modify passed pointer argument
-///    (e.g. Tcl_SplitList), which CLIPS can not simulate. Here we try
-///    to override return value for different types (e.g using FALSE
-///    to represent TCL_ERROR).
+///    (e.g. Tcl_SplitList), as a mechanism to return multiple values,
+///    which CLIPS can not simulate. Here we try to override return
+///    value for different types and using something like `/ok/` to
+///    represent function call status.
+
+#define FLAG_BUF_LEN 23 // max int64 string length (20) with two '/' delimiter
+
+#define OK_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 0)
+#define ERROR_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 1)
+#define ZERO_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 2)
+#define MINUS_ONE_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 3)
+
+#define OkFlag(env) \
+	(*((CLIPSLexeme **) GetEnvironmentData(env, OK_FLAG_DATA_ID)))
+#define ErrorFlag(env) \
+	(*((CLIPSLexeme **) GetEnvironmentData(env, ERROR_FLAG_DATA_ID)))
+#define ZeroFlag(env) \
+	(*((CLIPSLexeme **) GetEnvironmentData(env, ZERO_FLAG_DATA_ID)))
+#define MinusOneFlag(env) \
+	(*((CLIPSLexeme **) GetEnvironmentData(env, MINUS_ONE_FLAG_DATA_ID)))
 
 enum {
 	CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS = C_POINTER_EXTERNAL_ADDRESS + 1,
@@ -203,17 +220,20 @@ static void clips_Tcl_EvalEx(
 			   flagsContents);
 
 	switch (r) {
+		char buf[FLAG_BUF_LEN];
+
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
-		out->integerValue = CreateInteger(env, r);
+		snprintf(buf, FLAG_BUF_LEN, "/%d/", r);
+		out->lexemeValue = CreateSymbol(env, buf);
 	}
-
 }
+
 static void clips_Tcl_EvalObjEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -256,16 +276,18 @@ static void clips_Tcl_EvalObjEx(
 			      flagsContents);
 
 	switch (r) {
+		char buf[FLAG_BUF_LEN];
+
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
-		out->integerValue = CreateInteger(env, r);
+		snprintf(buf, FLAG_BUF_LEN, "/%d/", r);
+		out->lexemeValue = CreateSymbol(env, buf);
 	}
-
 }
 
 static void clips_Tcl_EvalObjv(
@@ -321,14 +343,17 @@ static void clips_Tcl_EvalObjv(
 			     flagsContents);
 
 	switch (r) {
+		char buf[FLAG_BUF_LEN];
+
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
-		out->integerValue = CreateInteger(env, r);
+		snprintf(buf, FLAG_BUF_LEN, "/%d/", r);
+		out->lexemeValue = CreateSymbol(env, buf);
 	}
 
 	genfree(env, objvContents, objvContentsSize);
@@ -345,10 +370,10 @@ static void clips_Tcl_Flush(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
 		assert(false);
@@ -366,10 +391,10 @@ static void clips_Tcl_FSCreateDirectory(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
 		assert(false);
@@ -393,7 +418,7 @@ static void clips_Tcl_FSRemoveDirectory(
 				      &obj);
 
 	if (r == TCL_OK)
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 	else
 		out->lexemeValue = CreateString(env, Tcl_GetString(obj));
 }
@@ -446,19 +471,15 @@ static void clips_Tcl_GetReturnOptions(
 	UDFValue code;
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, BOOLEAN_BIT | INTEGER_BIT, &code);
+	UDFNthArgument(udfc, 2, SYMBOL_BIT, &code);
 
 	int codeContents;
-	if (code.header->type == SYMBOL_TYPE) {
-		if (code.value == TrueSymbol(env))
-			codeContents = TCL_OK;
-		else if (code.value == FalseSymbol(env))
-			codeContents = TCL_ERROR;
-		else
-			assert(false);
-	} else {
-		codeContents = code.integerValue->contents;
-	}
+	if (code.value == OkFlag(env))
+		codeContents = TCL_OK;
+	else if (code.value == ErrorFlag(env))
+		codeContents = TCL_ERROR;
+	else
+		sscanf(code.lexemeValue->contents, "/%d/", &codeContents);
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
@@ -633,10 +654,10 @@ static void clips_Tcl_ListObjAppendElement(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
 		assert(false);
@@ -671,7 +692,7 @@ static void clips_Tcl_ListObjGetElements(
 		out->multifieldValue = MBCreate(mb);
 		MBDispose(mb);
 	} else {
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 	}
 }
 
@@ -988,10 +1009,10 @@ static void clips_Tcl_SetChannelOption(
 
 	switch (r) {
 	case TCL_OK:
-		out->lexemeValue = TrueSymbol(env);
+		out->lexemeValue = OkFlag(env);
 		break;
 	case TCL_ERROR:
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 		break;
 	default:
 		assert(false);
@@ -1022,7 +1043,7 @@ static void clips_Tcl_SplitList(
 		MBDispose(mb);
 		Tcl_Free((void *) argv);
 	} else {
-		out->lexemeValue = FalseSymbol(env);
+		out->lexemeValue = ErrorFlag(env);
 	}
 }
 
@@ -1059,8 +1080,38 @@ static void clips_Tcl_WriteObj(
 			     writeObjPtr.externalAddressValue->contents));
 }
 
+static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
+{
+	ReleaseLexeme(env, OkFlag(env));
+	ReleaseLexeme(env, ErrorFlag(env));
+	ReleaseLexeme(env, ZeroFlag(env));
+	ReleaseLexeme(env, MinusOneFlag(env));
+}
+
 void UserFunctions(Environment *env)
 {
+	AllocateEnvironmentData(
+		env, OK_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
+	AllocateEnvironmentData(
+		env, ERROR_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
+	AllocateEnvironmentData(
+		env, ZERO_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
+	AllocateEnvironmentData(
+		env, MINUS_ONE_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
+
+	RetainLexeme(env, OkFlag(env) = CreateSymbol(env, "/ok/"));
+	RetainLexeme(env, ErrorFlag(env) = CreateSymbol(env, "/error/"));
+	RetainLexeme(env, ZeroFlag(env) = CreateSymbol(env, "/0/"));
+	RetainLexeme(env, MinusOneFlag(env) = CreateSymbol(env, "/-1/"));
+
+	// According to manual, priority -2000 to 2000 are reserved by CLIPS.
+	AddEnvironmentCleanupFunction(
+		env,
+		"clips_tcl_EnvironmentCleanupFunction",
+		clips_tcl_EnvironmentCleanupFunction,
+		5000);
+
+
 	AddUDF(env,
 	       "tcl-alloc-stat-buf",
 	       "e", 0, 0, "",
@@ -1112,21 +1163,21 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-eval-ex",
-	       "bl", 3, 3, ";e;s;y",
+	       "y", 3, 3, ";e;s;y",
 	       clips_Tcl_EvalEx,
 	       "clips_Tcl_EvalEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-obj-ex",
-	       "bl", 3, 3, ";e;e;y",
+	       "y", 3, 3, ";e;e;y",
 	       clips_Tcl_EvalObjEx,
 	       "clips_Tcl_EvalObjEx",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-eval-objv",
-	       "bl", 3, 3, ";e;m;y",
+	       "y", 3, 3, ";e;m;y",
 	       clips_Tcl_EvalObjv,
 	       "clips_Tcl_EvalObjv",
 	       NULL);
@@ -1140,14 +1191,14 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-fs-create-directory",
-	       "b", 1, 1, ";e",
+	       "y", 1, 1, ";e",
 	       clips_Tcl_FSCreateDirectory,
 	       "clips_Tcl_FSCreateDirectory",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-fs-remove-directory",
-	       "bs", 2, 2, ";e;b",
+	       "sy", 2, 2, ";e;b",
 	       clips_Tcl_FSRemoveDirectory,
 	       "clips_Tcl_FSRemoveDirectory",
 	       NULL);
@@ -1175,7 +1226,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-get-return-options",
-	       "e", 2, 2, ";e;bl",
+	       "e", 2, 2, ";e;y",
 	       clips_Tcl_GetReturnOptions,
 	       "clips_Tcl_GetReturnOptions",
 	       NULL);
@@ -1224,14 +1275,14 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-list-obj-append-element",
-	       "b", 3, 3, ";e;e;e",
+	       "y", 3, 3, ";e;e;e",
 	       clips_Tcl_ListObjAppendElement,
 	       "clips_Tcl_ListObjAppendElement",
 	       NULL);
 
 	AddUDF(env,
 	       "tcl-list-obj-get-elements",
-	       "bm", 2, 2, ";e;e",
+	       "my", 2, 2, ";e;e",
 	       clips_Tcl_ListObjGetElements,
 	       "clips_Tcl_ListObjGetElements",
 	       NULL);
@@ -1294,7 +1345,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-set-channel-option",
-	       "l", 4, 4, ";e;e;s;s",
+	       "y", 4, 4, ";e;e;s;s",
 	       clips_Tcl_SetChannelOption,
 	       "clips_Tcl_SetChannelOption",
 	       NULL);
@@ -1308,7 +1359,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-split-list",
-	       "bm", 2, 2, ";e;s",
+	       "my", 2, 2, ";e;s",
 	       clips_Tcl_SplitList,
 	       "clips_Tcl_SplitList",
 	       NULL);
