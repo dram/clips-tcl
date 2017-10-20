@@ -53,6 +53,38 @@ static void clips_Tcl_AllocStatBuf(
 		CLIPS_TCL_STAT_BUF_EXTERNAL_ADDRESS);
 }
 
+static void clips_Tcl_AppendFormatToObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue objPtr;
+	UDFValue format;
+	UDFValue objv;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 3, STRING_BIT, &format);
+	UDFNthArgument(udfc, 4, MULTIFIELD_BIT, &objv);
+
+	int objc = objv.multifieldValue->length;
+
+	size_t objvContentsSize = objc * sizeof (Tcl_Obj *);
+	Tcl_Obj **objvContents = genalloc(env, objvContentsSize);
+	CLIPSValue *fields = objv.multifieldValue->contents;
+	for (int i = 0; i < objc; ++i) {
+		assert(fields[i].header->type == EXTERNAL_ADDRESS_TYPE);
+		objvContents[i] = fields[i].externalAddressValue->contents;
+	}
+
+	Tcl_AppendFormatToObj(interp.externalAddressValue->contents,
+			      objPtr.externalAddressValue->contents,
+			      format.lexemeValue->contents,
+			      objc,
+			      objvContents);
+
+	genfree(env, objvContents, objvContentsSize);
+}
+
 static void clips_Tcl_Close(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1149,6 +1181,13 @@ void UserFunctions(Environment *env)
 	       "e", 0, 0, "",
 	       clips_Tcl_AllocStatBuf,
 	       "clips_Tcl_AllocStatBuf",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-append-format-to-obj",
+	       "v", 4, 4, ";e;e;s;m",
+	       clips_Tcl_AppendFormatToObj,
+	       "clips_Tcl_AppendFormatToObj",
 	       NULL);
 
 	AddUDF(env,
