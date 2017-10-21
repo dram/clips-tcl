@@ -14,7 +14,8 @@
                    (format nil "GET / HTTP/1.0
 Host: www.example.com
 User-Agent: CLIPS-Tcl
-%n"))
+%n")
+                   -1)
   (tcl-flush ?channel)
   (tcl-gets-obj ?channel (bind ?obj (tcl-new-obj)))
   (println (tcl-get-string ?obj))

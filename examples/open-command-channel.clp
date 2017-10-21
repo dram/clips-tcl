@@ -26,7 +26,7 @@
   ?lines)
 
 (deffunction format-out (?channel ?format $?arguments)
-  (tcl-write-chars ?channel (format nil ?format (expand$ ?arguments))))
+  (tcl-write-chars ?channel (format nil ?format (expand$ ?arguments)) -1))
 
 (deffunction format-string (?format $?arguments)
   (format nil ?format (expand$ ?arguments)))
@@ -45,7 +45,7 @@
   (bind ?channel (tcl-open-command-channel ?*tcl*
                                            (create$ "cat" "-n")
                                            /stdin/))
-  (tcl-write-chars ?channel (format-string "a%nb%nc%n"))
+  (tcl-write-chars ?channel (format-string "a%nb%nc%n") -1)
   (tcl-close ?*tcl* ?channel)
 
   (call-/-process (create$ "cat" "-n")
@@ -65,7 +65,7 @@
   (bind ?channel (tcl-open-command-channel ?*tcl*
                                            (create$ "cat" "-n")
                                            /stdin/stdout/))
-  (tcl-write-chars ?channel (format-string "i%nj%nk%n"))
+  (tcl-write-chars ?channel (format-string "i%nj%nk%n") -1)
   (tcl-flush ?channel)
   (print (tcl-gets-obj ?channel (bind ?obj (tcl-new-obj))) " bytes: ")
   (println (tcl-get-string ?obj))
@@ -75,7 +75,7 @@
   (bind ?channel (tcl-open-command-channel ?*tcl*
                                            (create$ "sort" "-r" "|" "cat" "-n")
                                            /stdin/))
-  (tcl-write-chars ?channel (format-string "x%ny%nz%n"))
+  (tcl-write-chars ?channel (format-string "x%ny%nz%n") -1)
   (tcl-close ?*tcl* ?channel))
 
 (run)

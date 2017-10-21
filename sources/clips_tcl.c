@@ -13,9 +13,7 @@
 ///    bitwise operations, and also it seems that there is no easy to
 ///    define CLIPS constants in C side, so here we use a formatted
 ///    symbol (delimited by `/`).
-/// 3. As there is no way to count octets in CLIPS, so we count it in
-///    C side (e.g. Tcl_NewStringObj).
-/// 4. Several API in Tcl will modify passed pointer argument
+/// 3. Several API in Tcl will modify passed pointer argument
 ///    (e.g. Tcl_SplitList), as a mechanism to return multiple values,
 ///    which CLIPS can not simulate. Here we try to override return
 ///    value for different types and using something like `/ok/` to
@@ -212,13 +210,13 @@ static void clips_Tcl_EvalEx(
 {
 	UDFValue interp;
 	UDFValue script;
+	UDFValue numBytes;
 	UDFValue flags;
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 2, STRING_BIT, &script);
-	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
-
-	int numBytes = strlen(script.lexemeValue->contents);
+	UDFNthArgument(udfc, 3, INTEGER_BIT, &numBytes);
+	UDFNthArgument(udfc, 4, SYMBOL_BIT, &flags);
 
 	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -248,7 +246,7 @@ static void clips_Tcl_EvalEx(
 
 	int r = Tcl_EvalEx(interp.externalAddressValue->contents,
 			   script.externalAddressValue->contents,
-			   numBytes,
+			   numBytes.integerValue->contents,
 			   flagsContents);
 
 	switch (r) {
@@ -832,14 +830,15 @@ static void clips_Tcl_NewStringObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
 	UDFValue bytes;
+	UDFValue length;
 
 	UDFNthArgument(udfc, 1, STRING_BIT, &bytes);
-
-	size_t length = strlen(bytes.lexemeValue->contents);
+	UDFNthArgument(udfc, 2, INTEGER_BIT, &length);
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
-		Tcl_NewStringObj(bytes.lexemeValue->contents, length),
+		Tcl_NewStringObj(bytes.lexemeValue->contents,
+				 length.integerValue->contents),
 		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
 }
 
@@ -1126,17 +1125,17 @@ static void clips_Tcl_WriteChars(
 {
 	UDFValue channel;
 	UDFValue charBuf;
+	UDFValue bytesToWrite;
 
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
 	UDFNthArgument(udfc, 2, STRING_BIT, &charBuf);
-
-	size_t bytesToWrite = strlen(charBuf.lexemeValue->contents);
+	UDFNthArgument(udfc, 3, INTEGER_BIT, &bytesToWrite);
 
 	out->integerValue = CreateInteger(
 		env,
 		Tcl_WriteChars(channel.externalAddressValue->contents,
 			       charBuf.lexemeValue->contents,
-			       bytesToWrite));
+			       bytesToWrite.integerValue->contents));
 }
 
 static void clips_Tcl_WriteObj(
@@ -1244,7 +1243,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-eval-ex",
-	       "y", 3, 3, ";e;s;y",
+	       "y", 4, 4, ";e;s;l;y",
 	       clips_Tcl_EvalEx,
 	       "clips_Tcl_EvalEx",
 	       NULL);
@@ -1405,7 +1404,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-new-string-obj",
-	       "e", 1, 1, ";s",
+	       "e", 2, 2, ";s;l",
 	       clips_Tcl_NewStringObj,
 	       "clips_Tcl_NewStringObj",
 	       NULL);
@@ -1461,7 +1460,7 @@ void UserFunctions(Environment *env)
 
 	AddUDF(env,
 	       "tcl-write-chars",
-	       "l", 2, 2, ";e;s",
+	       "l", 3, 3, ";e;s;l",
 	       clips_Tcl_WriteChars,
 	       "clips_Tcl_WriteChars",
 	       NULL);

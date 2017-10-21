@@ -4,7 +4,7 @@
   ;; `tcl-create-interp` is needed to trigger `TclInitSubsystems()`.
   (bind ?tcl (tcl-create-interp))
 
-  (bind ?path (tcl-new-string-obj "fs-stat.clp"))
+  (bind ?path (tcl-new-string-obj "fs-stat.clp" -1))
 
   ;; According to https://tcl.tk/man/tcl8.6/TclLib/FileSystem.htm, reference
   ;; count of `?path` should be greater than 0.

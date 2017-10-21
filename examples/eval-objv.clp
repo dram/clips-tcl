@@ -5,7 +5,7 @@
   (foreach ?argument ?arguments
     (tcl-list-obj-append-element ?*tcl*
                                  ?argument-objs
-                                 (tcl-new-string-obj ?argument)))
+                                 (tcl-new-string-obj ?argument -1)))
   (if (eq (bind ?result
             (tcl-eval-objv ?*tcl*
                            (tcl-list-obj-get-elements ?*tcl*
@@ -28,8 +28,8 @@
 (defrule main
  =>
   (println (tcl-eval-objv ?*tcl*
-                          (create$ (tcl-new-string-obj "puts")
-                                   (tcl-new-string-obj "Hello, world."))
+                          (create$ (tcl-new-string-obj "puts" -1)
+                                   (tcl-new-string-obj "Hello, world." -1))
                           /))
 
   (println (tcl/s "string" "repeat" "a" "5"))

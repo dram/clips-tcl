@@ -1,7 +1,7 @@
 (deffunction accept-connection (?tcl ?channel ?host ?port)
   (bind ?obj (tcl-new-obj))
   (tcl-gets-obj ?channel ?obj)
-  (tcl-write-chars ?channel (tcl-get-string ?obj))
+  (tcl-write-chars ?channel (tcl-get-string ?obj) -1)
   (tcl-close ?tcl ?channel))
 
 (defrule main

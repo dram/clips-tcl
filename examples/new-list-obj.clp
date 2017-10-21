@@ -2,8 +2,8 @@
  =>
   (bind ?tcl (tcl-create-interp))
 
-  (bind ?o (tcl-new-list-obj (create$ (tcl-new-string-obj "a")
-                                      (tcl-new-string-obj "b c"))))
+  (bind ?o (tcl-new-list-obj (create$ (tcl-new-string-obj "a" -1)
+                                      (tcl-new-string-obj "b c" -1))))
 
   (println (tcl-get-string ?o))
 

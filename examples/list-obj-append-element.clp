@@ -2,7 +2,7 @@
  =>
   (bind ?tcl (tcl-create-interp))
   (bind ?list (tcl-new-obj))
-  (bind ?a (tcl-new-string-obj "a"))
+  (bind ?a (tcl-new-string-obj "a" -1))
 
   (tcl-list-obj-append-element ?tcl ?list ?a)
 
@@ -11,7 +11,7 @@
   (foreach ?s (create$ "a" "b" "c")
     (tcl-list-obj-append-element ?tcl
                                  ?list
-                                 (tcl-new-string-obj ?s)))
+                                 (tcl-new-string-obj ?s -1)))
 
   (println (tcl-get-string ?list))
 
