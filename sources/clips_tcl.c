@@ -1082,6 +1082,35 @@ static void clips_Tcl_SetChannelOption(
 	}
 }
 
+static void clips_Tcl_SetStringObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objPtr;
+	UDFValue bytes;
+	UDFValue length;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 2, STRING_BIT, &bytes);
+	UDFNthArgument(udfc, 3, INTEGER_BIT, &length);
+
+	Tcl_SetStringObj(objPtr.externalAddressValue->contents,
+			 bytes.lexemeValue->contents,
+			 length.integerValue->contents);
+}
+
+static void clips_Tcl_SetObjLength(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objPtr;
+	UDFValue newLength;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 2, INTEGER_BIT, &newLength);
+
+	Tcl_SetObjLength(objPtr.externalAddressValue->contents,
+			 newLength.integerValue->contents);
+}
+
 static void clips_Tcl_Sleep(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1442,6 +1471,20 @@ void UserFunctions(Environment *env)
 	       "y", 4, 4, ";e;e;s;s",
 	       clips_Tcl_SetChannelOption,
 	       "clips_Tcl_SetChannelOption",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-set-obj-length",
+	       "v", 2, 2, ";e;l",
+	       clips_Tcl_SetObjLength,
+	       "clips_Tcl_SetObjLength",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-set-string-obj",
+	       "v", 3, 3, ";e;s;l",
+	       clips_Tcl_SetStringObj,
+	       "clips_Tcl_SetStringObj",
 	       NULL);
 
 	AddUDF(env,
