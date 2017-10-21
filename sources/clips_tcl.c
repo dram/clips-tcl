@@ -221,6 +221,19 @@ static void clips_Tcl_DoOneEvent(
 	out->integerValue = CreateInteger(env, Tcl_DoOneEvent(flagsContents));
 }
 
+static void clips_Tcl_DuplicateObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_DuplicateObj(objPtr.externalAddressValue->contents),
+		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+}
+
 static void clips_Tcl_EvalEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1305,6 +1318,10 @@ void UserFunctions(Environment *env)
 	AddUDF(env, "tcl-do-one-event", "l", 1, 1, ";y",
 	       clips_Tcl_DoOneEvent,
 	       "clips_Tcl_DoOneEvent", NULL);
+
+	AddUDF(env, "tcl-duplicate-obj", "e", 1, 1, ";e",
+	       clips_Tcl_DuplicateObj,
+	       "clips_Tcl_DuplicateObj", NULL);
 
 	AddUDF(env, "tcl-eval-ex", "y", 4, 4, ";e;s;l;y",
 	       clips_Tcl_EvalEx,
