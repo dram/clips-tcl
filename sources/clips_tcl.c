@@ -83,6 +83,22 @@ static void clips_Tcl_AppendFormatToObj(
 	genfree(env, objvContents, objvContentsSize);
 }
 
+static void clips_Tcl_AppendToObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objPtr;
+	UDFValue bytes;
+	UDFValue length;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 2, STRING_BIT, &bytes);
+	UDFNthArgument(udfc, 3, INTEGER_BIT, &length);
+
+	Tcl_AppendToObj(objPtr.externalAddressValue->contents,
+			bytes.lexemeValue->contents,
+			length.integerValue->contents);
+}
+
 static void clips_Tcl_Close(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1182,6 +1198,24 @@ static void clips_Tcl_WriteObj(
 			     writeObjPtr.externalAddressValue->contents));
 }
 
+static void clips_Tcl_WriteRaw(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue channel;
+	UDFValue byteBuf;
+	UDFValue bytesToWrite;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
+	UDFNthArgument(udfc, 2, STRING_BIT, &byteBuf);
+	UDFNthArgument(udfc, 3, INTEGER_BIT, &bytesToWrite);
+
+	out->integerValue = CreateInteger(
+		env,
+		Tcl_WriteRaw(channel.externalAddressValue->contents,
+			     byteBuf.lexemeValue->contents,
+			     bytesToWrite.integerValue->contents));
+}
+
 static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
 {
 	ReleaseLexeme(env, OkFlag(env));
@@ -1226,6 +1260,13 @@ void UserFunctions(Environment *env)
 	       "v", 4, 4, ";e;e;s;m",
 	       clips_Tcl_AppendFormatToObj,
 	       "clips_Tcl_AppendFormatToObj",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-append-to-obj",
+	       "v", 3, 3, ";e;s;l",
+	       clips_Tcl_AppendToObj,
+	       "clips_Tcl_AppendToObj",
 	       NULL);
 
 	AddUDF(env,
@@ -1513,5 +1554,12 @@ void UserFunctions(Environment *env)
 	       "l", 2, 2, ";e;e",
 	       clips_Tcl_WriteObj,
 	       "clips_Tcl_WriteObj",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-write-raw",
+	       "l", 3, 3, ";e;s;l",
+	       clips_Tcl_WriteRaw,
+	       "clips_Tcl_WriteRaw",
 	       NULL);
 }
