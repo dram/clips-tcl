@@ -30,7 +30,7 @@
   ?lines)
 
 (deffunction format-out (?channel ?format $?arguments)
-  (tcl-write-chars ?channel (format nil ?format (expand$ ?arguments)) -1))
+  (tcl-write-raw ?channel (format nil ?format (expand$ ?arguments)) -1))
 
 (deffunction format-string (?format $?arguments)
   (format nil ?format (expand$ ?arguments)))
