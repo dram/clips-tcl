@@ -1248,318 +1248,183 @@ void UserFunctions(Environment *env)
 		5000);
 
 
-	AddUDF(env,
-	       "tcl-alloc-stat-buf",
-	       "e", 0, 0, "",
+	AddUDF(env, "tcl-alloc-stat-buf", "e", 0, 0, "",
 	       clips_Tcl_AllocStatBuf,
-	       "clips_Tcl_AllocStatBuf",
-	       NULL);
+	       "clips_Tcl_AllocStatBuf", NULL);
 
-	AddUDF(env,
-	       "tcl-append-format-to-obj",
-	       "v", 4, 4, ";e;e;s;m",
+	AddUDF(env, "tcl-append-format-to-obj", "v", 4, 4, ";e;e;s;m",
 	       clips_Tcl_AppendFormatToObj,
-	       "clips_Tcl_AppendFormatToObj",
-	       NULL);
+	       "clips_Tcl_AppendFormatToObj", NULL);
 
-	AddUDF(env,
-	       "tcl-append-to-obj",
-	       "v", 3, 3, ";e;s;l",
+	AddUDF(env, "tcl-append-to-obj", "v", 3, 3, ";e;s;l",
 	       clips_Tcl_AppendToObj,
-	       "clips_Tcl_AppendToObj",
-	       NULL);
+	       "clips_Tcl_AppendToObj", NULL);
 
-	AddUDF(env,
-	       "tcl-close",
-	       "l", 2, 2, ";e;e",
+	AddUDF(env, "tcl-close", "l", 2, 2, ";e;e",
 	       clips_Tcl_Close,
-	       "clips_Tcl_Close",
-	       NULL);
+	       "clips_Tcl_Close", NULL);
 
-	AddUDF(env,
-	       "tcl-concat",
-	       "s", 1, 1, ";m",
+	AddUDF(env, "tcl-concat", "s", 1, 1, ";m",
 	       clips_Tcl_Concat,
-	       "clips_Tcl_Concat",
-	       NULL);
+	       "clips_Tcl_Concat", NULL);
 
-	AddUDF(env,
-	       "tcl-create-interp",
-	       "e", 0, 0, "",
+	AddUDF(env, "tcl-create-interp", "e", 0, 0, "",
 	       clips_Tcl_CreateInterp,
-	       "clips_Tcl_CreateInterp",
-	       NULL);
+	       "clips_Tcl_CreateInterp", NULL);
 
-	AddUDF(env,
-	       "tcl-decr-ref-count",
-	       "v", 1, 1, ";e",
+	AddUDF(env, "tcl-decr-ref-count", "v", 1, 1, ";e",
 	       clips_Tcl_DecrRefCount,
-	       "clips_Tcl_DecrRefCount",
-	       NULL);
+	       "clips_Tcl_DecrRefCount", NULL);
 
-	AddUDF(env,
-	       "tcl-delete-interp",
-	       "v", 1, 1, ";e",
+	AddUDF(env, "tcl-delete-interp", "v", 1, 1, ";e",
 	       clips_Tcl_DeleteInterp,
-	       "clips_Tcl_DeleteInterp",
-	       NULL);
+	       "clips_Tcl_DeleteInterp", NULL);
 
-	AddUDF(env,
-	       "tcl-do-one-event",
-	       "l", 1, 1, ";y",
+	AddUDF(env, "tcl-do-one-event", "l", 1, 1, ";y",
 	       clips_Tcl_DoOneEvent,
-	       "clips_Tcl_DoOneEvent",
-	       NULL);
+	       "clips_Tcl_DoOneEvent", NULL);
 
-	AddUDF(env,
-	       "tcl-eval-ex",
-	       "y", 4, 4, ";e;s;l;y",
+	AddUDF(env, "tcl-eval-ex", "y", 4, 4, ";e;s;l;y",
 	       clips_Tcl_EvalEx,
-	       "clips_Tcl_EvalEx",
-	       NULL);
+	       "clips_Tcl_EvalEx", NULL);
 
-	AddUDF(env,
-	       "tcl-eval-obj-ex",
-	       "y", 3, 3, ";e;e;y",
+	AddUDF(env, "tcl-eval-obj-ex", "y", 3, 3, ";e;e;y",
 	       clips_Tcl_EvalObjEx,
-	       "clips_Tcl_EvalObjEx",
-	       NULL);
+	       "clips_Tcl_EvalObjEx", NULL);
 
-	AddUDF(env,
-	       "tcl-eval-objv",
-	       "y", 3, 3, ";e;m;y",
+	AddUDF(env, "tcl-eval-objv", "y", 3, 3, ";e;m;y",
 	       clips_Tcl_EvalObjv,
-	       "clips_Tcl_EvalObjv",
-	       NULL);
+	       "clips_Tcl_EvalObjv", NULL);
 
-	AddUDF(env,
-	       "tcl-flush",
-	       "b", 1, 1, ";e",
+	AddUDF(env, "tcl-flush", "b", 1, 1, ";e",
 	       clips_Tcl_Flush,
-	       "clips_Tcl_Flush",
-	       NULL);
+	       "clips_Tcl_Flush", NULL);
 
-	AddUDF(env,
-	       "tcl-format",
-	       "e", 3, 3, ";e;s;m",
+	AddUDF(env, "tcl-format", "e", 3, 3, ";e;s;m",
 	       clips_Tcl_Format,
-	       "clips_Tcl_Format",
-	       NULL);
+	       "clips_Tcl_Format", NULL);
 
-	AddUDF(env,
-	       "tcl-free",
-	       "v", 1, 1, ";e",
+	AddUDF(env, "tcl-free", "v", 1, 1, ";e",
 	       clips_Tcl_Free,
-	       "clips_Tcl_Free",
-	       NULL);
+	       "clips_Tcl_Free", NULL);
 
-	AddUDF(env,
-	       "tcl-fs-create-directory",
-	       "y", 1, 1, ";e",
+	AddUDF(env, "tcl-fs-create-directory", "y", 1, 1, ";e",
 	       clips_Tcl_FSCreateDirectory,
-	       "clips_Tcl_FSCreateDirectory",
-	       NULL);
+	       "clips_Tcl_FSCreateDirectory", NULL);
 
-	AddUDF(env,
-	       "tcl-fs-remove-directory",
-	       "sy", 2, 2, ";e;b",
+	AddUDF(env, "tcl-fs-remove-directory", "sy", 2, 2, ";e;b",
 	       clips_Tcl_FSRemoveDirectory,
-	       "clips_Tcl_FSRemoveDirectory",
-	       NULL);
+	       "clips_Tcl_FSRemoveDirectory", NULL);
 
-	AddUDF(env,
-	       "tcl-fs-stat",
-	       "l", 2, 2, ";e;e",
+	AddUDF(env, "tcl-fs-stat", "l", 2, 2, ";e;e",
 	       clips_Tcl_FSStat,
-	       "clips_Tcl_FSStat",
-	       NULL);
+	       "clips_Tcl_FSStat", NULL);
 
-	AddUDF(env,
-	       "tcl-get-modification-time-from-stat",
-	       "l", 1, 1, ";e",
+	AddUDF(env, "tcl-get-modification-time-from-stat", "l", 1, 1, ";e",
 	       clips_Tcl_GetModificationTimeFromStat,
-	       "clips_Tcl_GetModificationTimeFromStat",
-	       NULL);
+	       "clips_Tcl_GetModificationTimeFromStat", NULL);
 
-	AddUDF(env,
-	       "tcl-get-obj-result",
-	       "e", 1, 1, ";e",
+	AddUDF(env, "tcl-get-obj-result", "e", 1, 1, ";e",
 	       clips_Tcl_GetObjResult,
-	       "clips_Tcl_GetObjResult",
-	       NULL);
+	       "clips_Tcl_GetObjResult", NULL);
 
-	AddUDF(env,
-	       "tcl-get-return-options",
-	       "e", 2, 2, ";e;y",
+	AddUDF(env, "tcl-get-return-options", "e", 2, 2, ";e;y",
 	       clips_Tcl_GetReturnOptions,
-	       "clips_Tcl_GetReturnOptions",
-	       NULL);
+	       "clips_Tcl_GetReturnOptions", NULL);
 
-	AddUDF(env,
-	       "tcl-get-std-channel",
-	       "e", 1, 1, ";y",
+	AddUDF(env, "tcl-get-std-channel", "e", 1, 1, ";y",
 	       clips_Tcl_GetStdChannel,
-	       "clips_Tcl_GetStdChannel",
-	       NULL);
+	       "clips_Tcl_GetStdChannel", NULL);
 
-	AddUDF(env,
-	       "tcl-get-string",
-	       "s", 1, 1, ";e",
+	AddUDF(env, "tcl-get-string", "s", 1, 1, ";e",
 	       clips_Tcl_GetString,
-	       "clips_Tcl_GetString",
-	       NULL);
+	       "clips_Tcl_GetString", NULL);
 
-	AddUDF(env,
-	       "tcl-get-string-result",
-	       "s", 1, 1, ";e",
+	AddUDF(env, "tcl-get-string-result", "s", 1, 1, ";e",
 	       clips_Tcl_GetStringResult,
-	       "clips_Tcl_GetStringResult",
-	       NULL);
+	       "clips_Tcl_GetStringResult", NULL);
 
-	AddUDF(env,
-	       "tcl-get-var",
-	       "s", 3, 3, ";e;s;y",
+	AddUDF(env, "tcl-get-var", "s", 3, 3, ";e;s;y",
 	       clips_Tcl_GetVar,
-	       "clips_Tcl_GetVar",
-	       NULL);
+	       "clips_Tcl_GetVar", NULL);
 
-	AddUDF(env,
-	       "tcl-gets-obj",
-	       "l", 2, 2, ";e;e",
+	AddUDF(env, "tcl-gets-obj", "l", 2, 2, ";e;e",
 	       clips_Tcl_GetsObj,
-	       "clips_Tcl_GetsObj",
-	       NULL);
+	       "clips_Tcl_GetsObj", NULL);
 
-	AddUDF(env,
-	       "tcl-incr-ref-count",
-	       "v", 1, 1, ";e",
+	AddUDF(env, "tcl-incr-ref-count", "v", 1, 1, ";e",
 	       clips_Tcl_IncrRefCount,
-	       "clips_Tcl_IncrRefCount",
-	       NULL);
+	       "clips_Tcl_IncrRefCount", NULL);
 
-	AddUDF(env,
-	       "tcl-list-obj-append-element",
-	       "y", 3, 3, ";e;e;e",
+	AddUDF(env, "tcl-list-obj-append-element", "y", 3, 3, ";e;e;e",
 	       clips_Tcl_ListObjAppendElement,
-	       "clips_Tcl_ListObjAppendElement",
-	       NULL);
+	       "clips_Tcl_ListObjAppendElement", NULL);
 
-	AddUDF(env,
-	       "tcl-list-obj-get-elements",
-	       "my", 2, 2, ";e;e",
+	AddUDF(env, "tcl-list-obj-get-elements", "my", 2, 2, ";e;e",
 	       clips_Tcl_ListObjGetElements,
-	       "clips_Tcl_ListObjGetElements",
-	       NULL);
+	       "clips_Tcl_ListObjGetElements", NULL);
 
-	AddUDF(env,
-	       "tcl-merge",
-	       "s", 1, 1, ";m",
+	AddUDF(env, "tcl-merge", "s", 1, 1, ";m",
 	       clips_Tcl_Merge,
-	       "clips_Tcl_Merge",
-	       NULL);
+	       "clips_Tcl_Merge", NULL);
 
-	AddUDF(env,
-	       "tcl-new-list-obj",
-	       "e", 1, 1, ";m",
+	AddUDF(env, "tcl-new-list-obj", "e", 1, 1, ";m",
 	       clips_Tcl_NewListObj,
-	       "clips_Tcl_NewListObj",
-	       NULL);
+	       "clips_Tcl_NewListObj", NULL);
 
-	AddUDF(env,
-	       "tcl-new-obj",
-	       "e", 0, 0, "",
+	AddUDF(env, "tcl-new-obj", "e", 0, 0, "",
 	       clips_Tcl_NewObj,
-	       "clips_Tcl_NewObj",
-	       NULL);
+	       "clips_Tcl_NewObj", NULL);
 
-	AddUDF(env,
-	       "tcl-new-string-obj",
-	       "e", 2, 2, ";s;l",
+	AddUDF(env, "tcl-new-string-obj", "e", 2, 2, ";s;l",
 	       clips_Tcl_NewStringObj,
-	       "clips_Tcl_NewStringObj",
-	       NULL);
+	       "clips_Tcl_NewStringObj", NULL);
 
-	AddUDF(env,
-	       "tcl-open-command-channel",
-	       "e", 3, 3, ";e;m;y",
+	AddUDF(env, "tcl-open-command-channel", "e", 3, 3, ";e;m;y",
 	       clips_Tcl_OpenCommandChannel,
-	       "clips_Tcl_OpenCommandChannel",
-	       NULL);
+	       "clips_Tcl_OpenCommandChannel", NULL);
 
-	AddUDF(env,
-	       "tcl-open-tcp-client",
-	       "e", 6, 6, ";e;l;s;bs;l;b",
+	AddUDF(env, "tcl-open-tcp-client", "e", 6, 6, ";e;l;s;bs;l;b",
 	       clips_Tcl_OpenTcpClient,
-	       "clips_Tcl_OpenTcpClient",
-	       NULL);
+	       "clips_Tcl_OpenTcpClient", NULL);
 
-	AddUDF(env,
-	       "tcl-open-tcp-server",
-	       "e", 5, 5, ";e;l;bs;y;*",
+	AddUDF(env, "tcl-open-tcp-server", "e", 5, 5, ";e;l;bs;y;*",
 	       clips_Tcl_OpenTcpServer,
-	       "clips_Tcl_OpenTcpServer",
-	       NULL);
+	       "clips_Tcl_OpenTcpServer", NULL);
 
-	AddUDF(env,
-	       "tcl-register-channel",
-	       "v", 2, 2, ";e;e",
+	AddUDF(env, "tcl-register-channel", "v", 2, 2, ";e;e",
 	       clips_Tcl_RegisterChannel,
-	       "clips_Tcl_RegisterChannel",
-	       NULL);
+	       "clips_Tcl_RegisterChannel", NULL);
 
-	AddUDF(env,
-	       "tcl-set-channel-option",
-	       "y", 4, 4, ";e;e;s;s",
+	AddUDF(env, "tcl-set-channel-option", "y", 4, 4, ";e;e;s;s",
 	       clips_Tcl_SetChannelOption,
-	       "clips_Tcl_SetChannelOption",
-	       NULL);
+	       "clips_Tcl_SetChannelOption", NULL);
 
-	AddUDF(env,
-	       "tcl-set-obj-length",
-	       "v", 2, 2, ";e;l",
+	AddUDF(env, "tcl-set-obj-length", "v", 2, 2, ";e;l",
 	       clips_Tcl_SetObjLength,
-	       "clips_Tcl_SetObjLength",
-	       NULL);
+	       "clips_Tcl_SetObjLength", NULL);
 
-	AddUDF(env,
-	       "tcl-set-string-obj",
-	       "v", 3, 3, ";e;s;l",
+	AddUDF(env, "tcl-set-string-obj", "v", 3, 3, ";e;s;l",
 	       clips_Tcl_SetStringObj,
-	       "clips_Tcl_SetStringObj",
-	       NULL);
+	       "clips_Tcl_SetStringObj", NULL);
 
-	AddUDF(env,
-	       "tcl-sleep",
-	       "v", 1, 1, ";l",
+	AddUDF(env, "tcl-sleep", "v", 1, 1, ";l",
 	       clips_Tcl_Sleep,
-	       "clips_Tcl_Sleep",
-	       NULL);
+	       "clips_Tcl_Sleep", NULL);
 
-	AddUDF(env,
-	       "tcl-split-list",
-	       "my", 2, 2, ";e;s",
+	AddUDF(env, "tcl-split-list", "my", 2, 2, ";e;s",
 	       clips_Tcl_SplitList,
-	       "clips_Tcl_SplitList",
-	       NULL);
+	       "clips_Tcl_SplitList", NULL);
 
-	AddUDF(env,
-	       "tcl-write-chars",
-	       "l", 3, 3, ";e;s;l",
+	AddUDF(env, "tcl-write-chars", "l", 3, 3, ";e;s;l",
 	       clips_Tcl_WriteChars,
-	       "clips_Tcl_WriteChars",
-	       NULL);
+	       "clips_Tcl_WriteChars", NULL);
 
-	AddUDF(env,
-	       "tcl-write-obj",
-	       "l", 2, 2, ";e;e",
+	AddUDF(env, "tcl-write-obj", "l", 2, 2, ";e;e",
 	       clips_Tcl_WriteObj,
-	       "clips_Tcl_WriteObj",
-	       NULL);
+	       "clips_Tcl_WriteObj", NULL);
 
-	AddUDF(env,
-	       "tcl-write-raw",
-	       "l", 3, 3, ";e;s;l",
+	AddUDF(env, "tcl-write-raw", "l", 3, 3, ";e;s;l",
 	       clips_Tcl_WriteRaw,
-	       "clips_Tcl_WriteRaw",
-	       NULL);
+	       "clips_Tcl_WriteRaw", NULL);
 }
