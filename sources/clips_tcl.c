@@ -539,6 +539,18 @@ static void clips_Tcl_FSStat(
 			   statPtr.externalAddressValue->contents));
 }
 
+static void clips_Tcl_GetCharLength(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+
+	out->integerValue = CreateInteger(
+		env,
+		Tcl_GetCharLength(objPtr.externalAddressValue->contents));
+}
+
 static void clips_Tcl_GetModificationTimeFromStat(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1358,6 +1370,10 @@ void UserFunctions(Environment *env)
 	AddUDF(env, "tcl-fs-stat", "l", 2, 2, ";e;e",
 	       clips_Tcl_FSStat,
 	       "clips_Tcl_FSStat", NULL);
+
+	AddUDF(env, "tcl-get-char-length", "l", 1, 1, ";e",
+	       clips_Tcl_GetCharLength,
+	       "clips_Tcl_GetCharLength", NULL);
 
 	AddUDF(env, "tcl-get-modification-time-from-stat", "l", 1, 1, ";e",
 	       clips_Tcl_GetModificationTimeFromStat,
