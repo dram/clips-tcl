@@ -2,28 +2,38 @@
 
 (deffunction tcl ($?arguments)
   (bind ?argument-objs (tcl-new-obj))
+  (tcl-incr-ref-count ?argument-objs)
   (foreach ?argument ?arguments
     (tcl-list-obj-append-element ?*tcl*
                                  ?argument-objs
                                  (tcl-new-string-obj ?argument -1)))
-  (if (eq (bind ?result
-            (tcl-eval-objv ?*tcl*
-                           (tcl-list-obj-get-elements ?*tcl*
-                                                      ?argument-objs)
-                           /))
-          /ok/)
+  (bind ?result
+    (tcl-eval-objv ?*tcl*
+                   (tcl-list-obj-get-elements ?*tcl*
+                                              ?argument-objs)
+                   /))
+  (tcl-decr-ref-count ?argument-objs)
+  (if (eq ?result /ok/)
    then (tcl-get-obj-result ?*tcl*)
-   else (tcl-write-obj (tcl-get-std-channel /stderr/)
-                       (tcl-get-return-options ?*tcl* ?result))
+   else (bind ?returns (tcl-get-return-options ?*tcl* ?result))
+        (tcl-incr-ref-count ?returns)
+        (tcl-write-obj (tcl-get-std-channel /stderr/) ?returns)
+        (tcl-decr-ref-count ?returns)
         FALSE))
 
 (deffunction tcl/s ($?arguments)
   (if (bind ?result (tcl (expand$ ?arguments)))
-   then (tcl-get-string ?result)))
+   then (tcl-incr-ref-count ?result)
+        (bind ?s (tcl-get-string ?result))
+        (tcl-decr-ref-count ?result)
+        ?s))
 
 (deffunction tcl/m ($?arguments)
   (if (bind ?result (tcl (expand$ ?arguments)))
-   then (tcl-split-list ?*tcl* (tcl-get-string ?result))))
+   then (tcl-incr-ref-count ?result)
+        (bind ?m (tcl-split-list ?*tcl* (tcl-get-string ?result)))
+        (tcl-decr-ref-count ?result)
+        ?m))
 
 (defrule main
  =>

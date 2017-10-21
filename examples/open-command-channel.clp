@@ -15,9 +15,13 @@
 
 (deffunction read-line (?channel)
   (bind ?obj (tcl-new-obj))
-  (if (= -1 (tcl-gets-obj ?channel ?obj))
-   then FALSE
-   else (tcl-get-string ?obj)))
+  (tcl-incr-ref-count ?obj)
+  (bind ?result
+    (if (= -1 (tcl-gets-obj ?channel ?obj))
+     then FALSE
+     else (tcl-get-string ?obj)))
+  (tcl-decr-ref-count ?obj)
+  ?result)
 
 (deffunction read-lines (?channel)
   (bind ?lines (create$))
@@ -57,8 +61,7 @@
                                            (create$ "date"
                                                     "+%Y-%m-%dT%H:%M:%S")
                                            /stdout/))
-  (print (tcl-gets-obj ?channel (bind ?obj (tcl-new-obj))) " bytes: ")
-  (println (tcl-get-string ?obj))
+  (println (read-lines ?channel))
   (tcl-close ?*tcl* ?channel)
 
   ;; redirect both input and output
