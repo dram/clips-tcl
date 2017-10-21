@@ -724,6 +724,28 @@ static void clips_Tcl_IncrRefCount(
 	Tcl_IncrRefCount((Tcl_Obj *) objPtr.externalAddressValue->contents);
 }
 
+static void clips_Tcl_IsShared(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue objPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+
+	int r = Tcl_IsShared(
+		(Tcl_Obj *) objPtr.externalAddressValue->contents);
+
+	switch (r) {
+	case 1:
+		out->lexemeValue = TrueSymbol(env);
+		break;
+	case 0:
+		out->lexemeValue = FalseSymbol(env);
+		break;
+	default:
+		assert(false);
+	}
+}
+
 static void clips_Tcl_ListObjAppendElement(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1355,6 +1377,10 @@ void UserFunctions(Environment *env)
 	AddUDF(env, "tcl-incr-ref-count", "v", 1, 1, ";e",
 	       clips_Tcl_IncrRefCount,
 	       "clips_Tcl_IncrRefCount", NULL);
+
+	AddUDF(env, "tcl-is-shared", "b", 1, 1, ";e",
+	       clips_Tcl_IsShared,
+	       "clips_Tcl_IsShared", NULL);
 
 	AddUDF(env, "tcl-list-obj-append-element", "y", 3, 3, ";e;e;e",
 	       clips_Tcl_ListObjAppendElement,
