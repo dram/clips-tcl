@@ -444,6 +444,16 @@ static void clips_Tcl_Format(
 	genfree(env, objvContents, objvContentsSize);
 }
 
+static void clips_Tcl_Free(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue ptr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &ptr);
+
+	Tcl_Free(ptr.externalAddressValue->contents);
+}
+
 static void clips_Tcl_FSCreateDirectory(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1265,6 +1275,13 @@ void UserFunctions(Environment *env)
 	       "e", 3, 3, ";e;s;m",
 	       clips_Tcl_Format,
 	       "clips_Tcl_Format",
+	       NULL);
+
+	AddUDF(env,
+	       "tcl-free",
+	       "v", 1, 1, ";e",
+	       clips_Tcl_Free,
+	       "clips_Tcl_Free",
 	       NULL);
 
 	AddUDF(env,
