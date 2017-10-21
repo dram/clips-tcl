@@ -3,7 +3,7 @@
 (deffunction run-process ($?command)
   (tcl-close ?*tcl* (tcl-open-command-channel ?*tcl* ?command /)))
 
-(deffunction call-/-process (?command ?function-call ?flags)
+(deffunction with-process (?command ?function-call ?flags)
   (bind ?channel (tcl-open-command-channel ?*tcl*
                                            ?command
                                            ?flags))
@@ -48,9 +48,9 @@
   (tcl-write-chars ?channel (format-string "a%nb%nc%n") -1)
   (tcl-close ?*tcl* ?channel)
 
-  (call-/-process (create$ "cat" "-n")
-                  (create$ format-out "A%nB%nC%n")
-                  /stdin/)
+  (with-process (create$ "cat" "-n")
+                (create$ format-out "A%nB%nC%n")
+                /stdin/)
 
   ;; redirect output
   (bind ?channel (tcl-open-command-channel ?*tcl*
