@@ -954,16 +954,6 @@ static void clips_Tcl_OpenTcpClient(
 		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 }
 
-static void clips_Tcl_Sleep(
-	Environment *env, UDFContext *udfc, UDFValue *out)
-{
-	UDFValue ms;
-
-	UDFNthArgument(udfc, 1, INTEGER_BIT, &ms);
-
-	Tcl_Sleep(ms.integerValue->contents);
-}
-
 static void clips_Tcl_TcpAcceptProc(
 	ClientData clientData, Tcl_Channel channel, char *hostName, int port)
 {
@@ -1090,6 +1080,16 @@ static void clips_Tcl_SetChannelOption(
 	default:
 		assert(false);
 	}
+}
+
+static void clips_Tcl_Sleep(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue ms;
+
+	UDFNthArgument(udfc, 1, INTEGER_BIT, &ms);
+
+	Tcl_Sleep(ms.integerValue->contents);
 }
 
 static void clips_Tcl_SplitList(
