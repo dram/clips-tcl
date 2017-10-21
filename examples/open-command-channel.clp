@@ -7,11 +7,17 @@
   (bind ?channel (tcl-open-command-channel ?*tcl*
                                            ?command
                                            ?flags))
-  (bind ?result (funcall (nth$ 1 ?function-call)
-                         ?channel
-                         (expand$ (rest$ ?function-call))))
-  (tcl-close ?*tcl* ?channel)
-  ?result)
+  (if (eq ?channel nil)
+   then (bind ?returns (tcl-get-return-options ?*tcl* /error/))
+        (tcl-incr-ref-count ?returns)
+        (tcl-write-obj (tcl-get-std-channel /stderr/) ?returns)
+        (tcl-decr-ref-count ?returns)
+        FALSE
+   else (bind ?result (funcall (nth$ 1 ?function-call)
+                               ?channel
+                               (expand$ (rest$ ?function-call))))
+        (tcl-close ?*tcl* ?channel)
+        ?result))
 
 (deffunction read-line (?channel)
   (bind ?obj (tcl-new-obj))

@@ -25,6 +25,7 @@
 #define ERROR_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 1)
 #define ZERO_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 2)
 #define MINUS_ONE_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 3)
+#define NIL_SYMBOL_DATA_ID (USER_ENVIRONMENT_DATA + 4)
 
 #define OkFlag(env) \
 	(*((CLIPSLexeme **) GetEnvironmentData(env, OK_FLAG_DATA_ID)))
@@ -34,6 +35,8 @@
 	(*((CLIPSLexeme **) GetEnvironmentData(env, ZERO_FLAG_DATA_ID)))
 #define MinusOneFlag(env) \
 	(*((CLIPSLexeme **) GetEnvironmentData(env, MINUS_ONE_FLAG_DATA_ID)))
+#define NilSymbol(env) \
+	(*((CLIPSLexeme **) GetEnvironmentData(env, NIL_SYMBOL_DATA_ID)))
 
 enum {
 	CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS = C_POINTER_EXTERNAL_ADDRESS + 1,
@@ -968,13 +971,17 @@ static void clips_Tcl_OpenCommandChannel(
 		}
 	}
 
-	out->externalAddressValue = CreateExternalAddress(
-		env,
-		Tcl_OpenCommandChannel(interp.externalAddressValue->contents,
-				       argc,
-				       argvContents,
-				       flagsContents),
-		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+	Tcl_Channel r = Tcl_OpenCommandChannel(
+		interp.externalAddressValue->contents,
+		argc,
+		argvContents,
+		flagsContents);
+
+	if (r == NULL)
+		out->lexemeValue = NilSymbol(env);
+	else
+		out->externalAddressValue = CreateExternalAddress(
+			env, r, CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
 
 	genfree(env, argvContents, argvContentsSize);
 }
@@ -1281,11 +1288,14 @@ void UserFunctions(Environment *env)
 		env, ZERO_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
 	AllocateEnvironmentData(
 		env, MINUS_ONE_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
+	AllocateEnvironmentData(
+		env, NIL_SYMBOL_DATA_ID, sizeof (CLIPSLexeme *), NULL);
 
 	RetainLexeme(env, OkFlag(env) = CreateSymbol(env, "/ok/"));
 	RetainLexeme(env, ErrorFlag(env) = CreateSymbol(env, "/error/"));
 	RetainLexeme(env, ZeroFlag(env) = CreateSymbol(env, "/0/"));
 	RetainLexeme(env, MinusOneFlag(env) = CreateSymbol(env, "/-1/"));
+	RetainLexeme(env, NilSymbol(env) = CreateSymbol(env, "nil"));
 
 	// According to manual, priority -2000 to 2000 are reserved by CLIPS.
 	AddEnvironmentCleanupFunction(
@@ -1439,7 +1449,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_NewStringObj,
 	       "clips_Tcl_NewStringObj", NULL);
 
-	AddUDF(env, "tcl-open-command-channel", "e", 3, 3, ";e;m;y",
+	AddUDF(env, "tcl-open-command-channel", "ey", 3, 3, ";e;m;y",
 	       clips_Tcl_OpenCommandChannel,
 	       "clips_Tcl_OpenCommandChannel", NULL);
 
