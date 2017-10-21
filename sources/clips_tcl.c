@@ -1318,7 +1318,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_EvalObjv,
 	       "clips_Tcl_EvalObjv", NULL);
 
-	AddUDF(env, "tcl-flush", "b", 1, 1, ";e",
+	AddUDF(env, "tcl-flush", "y", 1, 1, ";e",
 	       clips_Tcl_Flush,
 	       "clips_Tcl_Flush", NULL);
 
