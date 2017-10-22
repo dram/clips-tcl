@@ -21,12 +21,19 @@
         (tcl-decr-ref-count ?returns)
         FALSE))
 
-(deffunction tcl/s ($?arguments)
+(deffunction tcl/b ($?arguments)
   (if (bind ?result (tcl (expand$ ?arguments)))
    then (tcl-incr-ref-count ?result)
-        (bind ?s (tcl-get-string ?result))
+        (bind ?b (tcl-get-boolean-from-obj ?result))
         (tcl-decr-ref-count ?result)
-        ?s))
+        ?b))
+
+(deffunction tcl/l ($?arguments)
+  (if (bind ?result (tcl (expand$ ?arguments)))
+   then (tcl-incr-ref-count ?result)
+        (bind ?l (tcl-get-long-from-obj ?result))
+        (tcl-decr-ref-count ?result)
+        ?l))
 
 (deffunction tcl/m ($?arguments)
   (if (bind ?result (tcl (expand$ ?arguments)))
@@ -34,6 +41,13 @@
         (bind ?m (tcl-split-list ?*tcl* (tcl-get-string ?result)))
         (tcl-decr-ref-count ?result)
         ?m))
+
+(deffunction tcl/s ($?arguments)
+  (if (bind ?result (tcl (expand$ ?arguments)))
+   then (tcl-incr-ref-count ?result)
+        (bind ?s (tcl-get-string ?result))
+        (tcl-decr-ref-count ?result)
+        ?s))
 
 (defrule main
  =>
