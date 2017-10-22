@@ -542,6 +542,37 @@ static void clips_Tcl_FSStat(
 			   statPtr.externalAddressValue->contents));
 }
 
+static void clips_Tcl_GetBooleanFromObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue objPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+
+	int boolPtr;
+
+	int r = Tcl_GetBooleanFromObj(interp.externalAddressValue->contents,
+				      objPtr.externalAddressValue->contents,
+				      &boolPtr);
+
+	if (r ==  TCL_ERROR) {
+		out->lexemeValue = ErrorFlag(env);
+	} else {
+		switch (boolPtr) {
+		case 0:
+			out->lexemeValue = FalseSymbol(env);
+			break;
+		case 1:
+			out->lexemeValue = TrueSymbol(env);
+			break;
+		default:
+			assert(false);
+		}
+	}
+}
+
 static void clips_Tcl_GetCharLength(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -552,6 +583,27 @@ static void clips_Tcl_GetCharLength(
 	out->integerValue = CreateInteger(
 		env,
 		Tcl_GetCharLength(objPtr.externalAddressValue->contents));
+}
+
+static void clips_Tcl_GetLongFromObj(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue interp;
+	UDFValue objPtr;
+
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+
+	long longPtr;
+
+	int r = Tcl_GetLongFromObj(interp.externalAddressValue->contents,
+				   objPtr.externalAddressValue->contents,
+				   &longPtr);
+
+	if (r ==  TCL_ERROR)
+		out->lexemeValue = ErrorFlag(env);
+	else
+		out->integerValue = CreateInteger(env, longPtr);
 }
 
 static void clips_Tcl_GetModificationTimeFromStat(
@@ -1381,9 +1433,17 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_FSStat,
 	       "clips_Tcl_FSStat", NULL);
 
+	AddUDF(env, "tcl-get-boolean-from-obj", "by", 1, 1, ";e",
+	       clips_Tcl_GetBooleanFromObj,
+	       "clips_Tcl_GetBooleanFromObj", NULL);
+
 	AddUDF(env, "tcl-get-char-length", "l", 1, 1, ";e",
 	       clips_Tcl_GetCharLength,
 	       "clips_Tcl_GetCharLength", NULL);
+
+	AddUDF(env, "tcl-get-long-from-obj", "ly", 1, 1, ";e",
+	       clips_Tcl_GetLongFromObj,
+	       "clips_Tcl_GetLongFromObj", NULL);
 
 	AddUDF(env, "tcl-get-modification-time-from-stat", "l", 1, 1, ";e",
 	       clips_Tcl_GetModificationTimeFromStat,
