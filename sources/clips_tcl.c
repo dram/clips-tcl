@@ -757,11 +757,14 @@ static void clips_Tcl_GetVar(
 		}
 	}
 
-	out->lexemeValue = CreateString(
-		env,
-		Tcl_GetVar(Interp(env),
-			   varName.lexemeValue->contents,
-			   flagsContents));
+	const char *r = Tcl_GetVar(Interp(env),
+				   varName.lexemeValue->contents,
+				   flagsContents);
+
+	if (r == NULL)
+		out->lexemeValue = NilSymbol(env);
+	else
+		out->lexemeValue = CreateString(env, r);
 }
 
 static void clips_Tcl_GetsObj(
@@ -1496,7 +1499,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_GetStringResult,
 	       "clips_Tcl_GetStringResult", NULL);
 
-	AddUDF(env, "tcl-get-var", "s", 2, 2, ";s;y",
+	AddUDF(env, "tcl-get-var", "sy", 2, 2, ";s;y",
 	       clips_Tcl_GetVar,
 	       "clips_Tcl_GetVar", NULL);
 
