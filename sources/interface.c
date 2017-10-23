@@ -1324,14 +1324,41 @@ static int tcl_clips_CmdProc(ClientData clientData,
 		AssertString(env, argv[2]);
 		break;
 	case 'b':
-		assert(strcmp(command, "build") == 0);
-		assert(argc == 3);
-		Build(env, argv[2]);
+		switch (command[1]) {
+		case 'a':
+			assert(strcmp(command, "batch-star") == 0);
+			assert(argc == 3);
+			BatchStar(env, argv[2]);
+			break;
+		case 'u':
+			assert(strcmp(command, "build") == 0);
+			assert(argc == 3);
+			Build(env, argv[2]);
+			break;
+		default:
+			assert(false);
+		}
 		break;
 	case 'e':
 		assert(strcmp(command, "eval") == 0);
 		assert(argc == 3);
 		Eval(env, argv[2], NULL);
+		break;
+	case 'l':
+		switch (command[4]) {
+		case 0:
+			assert(strcmp(command, "load") == 0);
+			assert(argc == 3);
+			Load(env, argv[2]);
+			break;
+		case '-':
+			assert(strcmp(command, "load-facts") == 0);
+			assert(argc == 3);
+			LoadFacts(env, argv[2]);
+			break;
+		default:
+			assert(false);
+		}
 		break;
 	case 'r':
 		switch (command[1]) {
@@ -1345,6 +1372,8 @@ static int tcl_clips_CmdProc(ClientData clientData,
 			assert(argc == 3);
 			Run(env, atoll(argv[2]));
 			break;
+		default:
+			assert(false);
 		}
 		break;
 	default:
