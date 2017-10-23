@@ -1295,6 +1295,68 @@ static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
 	ReleaseLexeme(env, MinusOneFlag(env));
 }
 
+static int tcl_clips_CmdProc(ClientData clientData,
+			     Tcl_Interp *interp,
+			     int argc,
+			     const char *argv[])
+{
+	Environment *env = (Environment *) clientData;
+
+	if (argc < 2) {
+		Tcl_WrongNumArgs(
+			interp, 0, NULL, "clips command ...");
+		return TCL_ERROR;
+	}
+
+	const char *command = argv[1];
+
+	switch (command[0]) {
+	case 'a':
+		assert(strcmp(command, "assert-string") == 0);
+		assert(argc == 3);
+		AssertString(env, argv[2]);
+		break;
+	case 'b':
+		assert(strcmp(command, "build") == 0);
+		assert(argc == 3);
+		Build(env, argv[2]);
+		break;
+	case 'e':
+		assert(strcmp(command, "eval") == 0);
+		assert(argc == 3);
+		Eval(env, argv[2], NULL);
+		break;
+	case 'r':
+		switch (command[1]) {
+		case 'e':
+			assert(strcmp(command, "reset") == 0);
+			assert(argc == 2);
+			Reset(env);
+			break;
+		case 'u':
+			assert(strcmp(command, "run") == 0);
+			assert(argc == 3);
+			Run(env, atoll(argv[2]));
+			break;
+		}
+		break;
+	default:
+		assert(false);
+	}
+
+	return TCL_OK;
+}
+
+void InitializeTcl(Tcl_Interp *tcl, Environment *env)
+{
+	Tcl_DString encoding;
+	Tcl_GetEncodingNameFromEnvironment(&encoding);
+	Tcl_SetSystemEncoding(tcl, Tcl_DStringValue(&encoding));
+	Tcl_DStringFree(&encoding);
+
+	Tcl_CreateCommand(tcl, "clips", tcl_clips_CmdProc, env, NULL);
+}
+
 void UserFunctions(Environment *env)
 {
 	AllocateEnvironmentData(
@@ -1312,10 +1374,7 @@ void UserFunctions(Environment *env)
 	RetainLexeme(env, data->minusOneFlag = CreateSymbol(env, "/-1/"));
 	RetainLexeme(env, data->nilSymbol = CreateSymbol(env, "nil"));
 
-	Tcl_DString encoding;
-	Tcl_GetEncodingNameFromEnvironment(&encoding);
-	Tcl_SetSystemEncoding(data->interp, Tcl_DStringValue(&encoding));
-	Tcl_DStringFree(&encoding);
+	InitializeTcl(data->interp, env);
 
 	// According to manual, priority -2000 to 2000 are reserved by CLIPS.
 	AddEnvironmentCleanupFunction(
