@@ -23,7 +23,7 @@
 // Max string length of int64 (20), plus two '/' delimiters.
 static const int FLAG_BUF_LEN = 23;
 
-typedef struct clips_tcl_EnvironmentData {
+typedef struct {
 	Tcl_Interp *interp;
 	CLIPSLexeme *okFlag;
 	CLIPSLexeme *errorFlag;
