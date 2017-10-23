@@ -276,18 +276,16 @@ static void clips_Tcl_EvalEx(
 		if (!*++p)
 			break;
 
-		assert(strncmp(p, "eval-", 5) == 0);
-		p += 5;
-		switch (*p) {
+		switch (p[5]) {
 		case 'd':
-			assert(strncmp(p, "direct", 6) == 0);
+			assert(strncmp(p, "eval-direct", 11) == 0);
 			flagsContents |= TCL_EVAL_DIRECT;
-			p += 6;
+			p += 11;
 			break;
 		case 'g':
-			assert(strncmp(p, "global", 6) == 0);
+			assert(strncmp(p, "eval-global", 11) == 0);
 			flagsContents |= TCL_EVAL_GLOBAL;
-			p += 6;
+			p += 11;
 			break;
 		default:
 			assert(false);
@@ -330,18 +328,16 @@ static void clips_Tcl_EvalObjEx(
 		if (!*++p)
 			break;
 
-		assert(strncmp(p, "eval-", 5) == 0);
-		p += 5;
-		switch (*p) {
+		switch (p[5]) {
 		case 'd':
-			assert(strncmp(p, "direct", 6) == 0);
+			assert(strncmp(p, "eval-direct", 11) == 0);
 			flagsContents |= TCL_EVAL_DIRECT;
-			p += 6;
+			p += 11;
 			break;
 		case 'g':
-			assert(strncmp(p, "global", 6) == 0);
+			assert(strncmp(p, "eval-global", 11) == 0);
 			flagsContents |= TCL_EVAL_GLOBAL;
-			p += 6;
+			p += 11;
 			break;
 		default:
 			assert(false);
@@ -393,18 +389,16 @@ static void clips_Tcl_EvalObjv(
 		if (!*++p)
 			break;
 
-		assert(strncmp(p, "eval-", 5) == 0);
-		p += 5;
-		switch (*p) {
+		switch (p[5]) {
 		case 'd':
-			assert(strncmp(p, "direct", 6) == 0);
+			assert(strncmp(p, "eval-direct", 11) == 0);
 			flagsContents |= TCL_EVAL_DIRECT;
-			p += 6;
+			p += 11;
 			break;
 		case 'g':
-			assert(strncmp(p, "global", 6) == 0);
+			assert(strncmp(p, "eval-global", 11) == 0);
 			flagsContents |= TCL_EVAL_GLOBAL;
-			p += 6;
+			p += 11;
 			break;
 		default:
 			assert(false);
@@ -666,23 +660,21 @@ static void clips_Tcl_GetStdChannel(
 		if (!*++p)
 			break;
 
-		assert(strncmp(p, "std", 3) == 0);
-		p += 3;
-		switch (*p) {
+		switch (p[3]) {
 		case 'e':
-			assert(strncmp(p, "err", 3) == 0);
+			assert(strncmp(p, "stderr", 6) == 0);
 			typeContents |= TCL_STDERR;
-			p += 3;
+			p += 6;
 			break;
 		case 'i':
-			assert(strncmp(p, "in", 2) == 0);
+			assert(strncmp(p, "stdin", 5) == 0);
 			typeContents |= TCL_STDIN;
-			p += 2;
+			p += 5;
 			break;
 		case 'o':
-			assert(strncmp(p, "out", 3) == 0);
+			assert(strncmp(p, "stdout", 6) == 0);
 			typeContents |= TCL_STDOUT;
-			p += 3;
+			p += 6;
 			break;
 		default:
 			assert(false);
@@ -983,23 +975,21 @@ static void clips_Tcl_OpenCommandChannel(
 			p += 12;
 			break;
 		case 's':
-			assert(strncmp(p, "std", 3) == 0);
-			p += 3;
-			switch (*p) {
+			switch (p[3]) {
 			case 'e':
-				assert(strncmp(p, "err", 3) == 0);
+				assert(strncmp(p, "stderr", 6) == 0);
 				flagsContents |= TCL_STDERR;
-				p += 3;
+				p += 6;
 				break;
 			case 'i':
-				assert(strncmp(p, "in", 2) == 0);
+				assert(strncmp(p, "stdin", 5) == 0);
 				flagsContents |= TCL_STDIN;
-				p += 2;
+				p += 5;
 				break;
 			case 'o':
-				assert(strncmp(p, "out", 3) == 0);
+				assert(strncmp(p, "stdout", 6) == 0);
 				flagsContents |= TCL_STDOUT;
-				p += 3;
+				p += 6;
 				break;
 			default:
 				assert(false);
