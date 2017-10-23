@@ -740,18 +740,21 @@ static void clips_Tcl_GetVar(
 			p += 11;
 			break;
 		case 'l':
-			switch (*p) {
+			switch (p[1]) {
 			case 'e':
 				assert(strncmp(p, "leave-err-msg", 13) == 0);
 				flagsContents |= TCL_LEAVE_ERR_MSG;
 				p += 13;
+				break;
 			case 'i':
 				assert(strncmp(p, "list-element", 12) == 0);
 				flagsContents |= TCL_LIST_ELEMENT;
 				p += 12;
+				break;
 			default:
 				assert(false);
 			}
+			break;
 		default:
 			assert(false);
 		}
