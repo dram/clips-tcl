@@ -1,11 +1,8 @@
 (defrule main
  =>
-  (bind ?tcl (tcl-create-interp))
-
   (bind ?o (tcl-new-string-obj "## " -1))
 
-  (tcl-append-format-to-obj ?tcl
-                            ?o
+  (tcl-append-format-to-obj ?o
                             "%5.2f %s /
 
 %s"
@@ -13,9 +10,7 @@
                                      (tcl-new-string-obj "a" -1)
                                      (tcl-new-string-obj "b c" -1)))
 
-  (println (tcl-get-string ?o))
-
-  (tcl-delete-interp ?tcl))
+  (println (tcl-get-string ?o)))
 
 (run)
 

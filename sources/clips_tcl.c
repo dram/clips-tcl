@@ -21,22 +21,42 @@
 
 #define FLAG_BUF_LEN 23 // max int64 string length (20) with two '/' delimiter
 
-#define OK_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 0)
-#define ERROR_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 1)
-#define ZERO_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 2)
-#define MINUS_ONE_FLAG_DATA_ID (USER_ENVIRONMENT_DATA + 3)
-#define NIL_SYMBOL_DATA_ID (USER_ENVIRONMENT_DATA + 4)
+typedef struct clips_tcl_EnvironmentData {
+	Tcl_Interp *interp;
+	CLIPSLexeme *okFlag;
+	CLIPSLexeme *errorFlag;
+	CLIPSLexeme *zeroFlag;
+	CLIPSLexeme *minusOneFlag;
+	CLIPSLexeme *nilSymbol;
+} CLIPS_Tcl_EnvironmentData;
 
-#define OkFlag(env) \
-	(*((CLIPSLexeme **) GetEnvironmentData(env, OK_FLAG_DATA_ID)))
-#define ErrorFlag(env) \
-	(*((CLIPSLexeme **) GetEnvironmentData(env, ERROR_FLAG_DATA_ID)))
-#define ZeroFlag(env) \
-	(*((CLIPSLexeme **) GetEnvironmentData(env, ZERO_FLAG_DATA_ID)))
-#define MinusOneFlag(env) \
-	(*((CLIPSLexeme **) GetEnvironmentData(env, MINUS_ONE_FLAG_DATA_ID)))
-#define NilSymbol(env) \
-	(*((CLIPSLexeme **) GetEnvironmentData(env, NIL_SYMBOL_DATA_ID)))
+static inline CLIPS_Tcl_EnvironmentData *EnvironmentData(Environment *env) {
+	return GetEnvironmentData(env, USER_ENVIRONMENT_DATA);
+}
+
+static inline Tcl_Interp *Interp(Environment *env) {
+	return EnvironmentData(env)->interp;
+}
+
+static inline CLIPSLexeme *OkFlag(Environment *env) {
+	return EnvironmentData(env)->okFlag;
+}
+
+static inline CLIPSLexeme *ErrorFlag(Environment *env) {
+	return EnvironmentData(env)->errorFlag;
+}
+
+static inline CLIPSLexeme *ZeroFlag(Environment *env) {
+	return EnvironmentData(env)->zeroFlag;
+}
+
+static inline CLIPSLexeme *MinusOneFlag(Environment *env) {
+	return EnvironmentData(env)->minusOneFlag;
+}
+
+static inline CLIPSLexeme *NilSymbol(Environment *env) {
+	return EnvironmentData(env)->nilSymbol;
+}
 
 enum {
 	CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS = C_POINTER_EXTERNAL_ADDRESS + 1,
@@ -57,15 +77,13 @@ static void clips_Tcl_AllocStatBuf(
 static void clips_Tcl_AppendFormatToObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue objPtr;
 	UDFValue format;
 	UDFValue objv;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
-	UDFNthArgument(udfc, 3, STRING_BIT, &format);
-	UDFNthArgument(udfc, 4, MULTIFIELD_BIT, &objv);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 2, STRING_BIT, &format);
+	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &objv);
 
 	int objc = objv.multifieldValue->length;
 
@@ -77,7 +95,7 @@ static void clips_Tcl_AppendFormatToObj(
 		objvContents[i] = fields[i].externalAddressValue->contents;
 	}
 
-	Tcl_AppendFormatToObj(interp.externalAddressValue->contents,
+	Tcl_AppendFormatToObj(Interp(env),
 			      objPtr.externalAddressValue->contents,
 			      format.lexemeValue->contents,
 			      objc,
@@ -105,15 +123,13 @@ static void clips_Tcl_AppendToObj(
 static void clips_Tcl_Close(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue channel;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &channel);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
 
 	out->integerValue = CreateInteger(
 		env,
-		Tcl_Close(interp.externalAddressValue->contents,
+		Tcl_Close(Interp(env),
 			  channel.externalAddressValue->contents));
 }
 
@@ -240,15 +256,13 @@ static void clips_Tcl_DuplicateObj(
 static void clips_Tcl_EvalEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue script;
 	UDFValue numBytes;
 	UDFValue flags;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, STRING_BIT, &script);
-	UDFNthArgument(udfc, 3, INTEGER_BIT, &numBytes);
-	UDFNthArgument(udfc, 4, SYMBOL_BIT, &flags);
+	UDFNthArgument(udfc, 1, STRING_BIT, &script);
+	UDFNthArgument(udfc, 2, INTEGER_BIT, &numBytes);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
 
 	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -276,7 +290,7 @@ static void clips_Tcl_EvalEx(
 		}
 	}
 
-	int r = Tcl_EvalEx(interp.externalAddressValue->contents,
+	int r = Tcl_EvalEx(Interp(env),
 			   script.externalAddressValue->contents,
 			   numBytes.integerValue->contents,
 			   flagsContents);
@@ -299,13 +313,11 @@ static void clips_Tcl_EvalEx(
 static void clips_Tcl_EvalObjEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue objPtr;
 	UDFValue flags;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
-	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 2, SYMBOL_BIT, &flags);
 
 	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -333,7 +345,7 @@ static void clips_Tcl_EvalObjEx(
 		}
 	}
 
-	int r = Tcl_EvalObjEx(interp.externalAddressValue->contents,
+	int r = Tcl_EvalObjEx(Interp(env),
 			      objPtr.externalAddressValue->contents,
 			      flagsContents);
 
@@ -355,13 +367,11 @@ static void clips_Tcl_EvalObjEx(
 static void clips_Tcl_EvalObjv(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue objv;
 	UDFValue flags;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, MULTIFIELD_BIT, &objv);
-	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
+	UDFNthArgument(udfc, 1, MULTIFIELD_BIT, &objv);
+	UDFNthArgument(udfc, 2, SYMBOL_BIT, &flags);
 
 	int objc = objv.multifieldValue->length;
 
@@ -399,10 +409,7 @@ static void clips_Tcl_EvalObjv(
 		}
 	}
 
-	int r = Tcl_EvalObjv(interp.externalAddressValue->contents,
-			     objc,
-			     objvContents,
-			     flagsContents);
+	int r = Tcl_EvalObjv(Interp(env), objc, objvContents, flagsContents);
 
 	switch (r) {
 		char buf[FLAG_BUF_LEN];
@@ -445,13 +452,11 @@ static void clips_Tcl_Flush(
 static void clips_Tcl_Format(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue format;
 	UDFValue objv;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, STRING_BIT, &format);
-	UDFNthArgument(udfc, 3, MULTIFIELD_BIT, &objv);
+	UDFNthArgument(udfc, 1, STRING_BIT, &format);
+	UDFNthArgument(udfc, 2, MULTIFIELD_BIT, &objv);
 
 	int objc = objv.multifieldValue->length;
 
@@ -465,7 +470,7 @@ static void clips_Tcl_Format(
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
-		Tcl_Format(interp.externalAddressValue->contents,
+		Tcl_Format(Interp(env),
 			   format.lexemeValue->contents,
 			   objc,
 			   objvContents),
@@ -545,15 +550,13 @@ static void clips_Tcl_FSStat(
 static void clips_Tcl_GetBooleanFromObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue objPtr;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
 
 	int boolPtr;
 
-	int r = Tcl_GetBooleanFromObj(interp.externalAddressValue->contents,
+	int r = Tcl_GetBooleanFromObj(Interp(env),
 				      objPtr.externalAddressValue->contents,
 				      &boolPtr);
 
@@ -588,15 +591,13 @@ static void clips_Tcl_GetCharLength(
 static void clips_Tcl_GetLongFromObj(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue objPtr;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
 	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &objPtr);
 
 	long longPtr;
 
-	int r = Tcl_GetLongFromObj(interp.externalAddressValue->contents,
+	int r = Tcl_GetLongFromObj(Interp(env),
 				   objPtr.externalAddressValue->contents,
 				   &longPtr);
 
@@ -622,24 +623,18 @@ static void clips_Tcl_GetModificationTimeFromStat(
 static void clips_Tcl_GetObjResult(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
-
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-
 	out->externalAddressValue = CreateExternalAddress(
 		env,
-		Tcl_GetObjResult(interp.externalAddressValue->contents),
+		Tcl_GetObjResult(Interp(env)),
 		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_GetReturnOptions(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue code;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, SYMBOL_BIT, &code);
+	UDFNthArgument(udfc, 1, SYMBOL_BIT, &code);
 
 	int codeContents;
 	if (code.value == OkFlag(env))
@@ -651,8 +646,7 @@ static void clips_Tcl_GetReturnOptions(
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
-		Tcl_GetReturnOptions(interp.externalAddressValue->contents,
-				     codeContents),
+		Tcl_GetReturnOptions(Interp(env), codeContents),
 		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
 }
 
@@ -715,25 +709,17 @@ static void clips_Tcl_GetString(
 static void clips_Tcl_GetStringResult(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
-
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-
-	out->lexemeValue = CreateString(
-		env,
-		Tcl_GetStringResult(interp.externalAddressValue->contents));
+	out->lexemeValue = CreateString(env, Tcl_GetStringResult(Interp(env)));
 }
 
 static void clips_Tcl_GetVar(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue varName;
 	UDFValue flags;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, STRING_BIT, &varName);
-	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
+	UDFNthArgument(udfc, 1, STRING_BIT, &varName);
+	UDFNthArgument(udfc, 2, SYMBOL_BIT, &flags);
 
 	int flagsContents = 0;
 	const char *p = flags.lexemeValue->contents;
@@ -774,7 +760,7 @@ static void clips_Tcl_GetVar(
 
 	out->lexemeValue = CreateString(
 		env,
-		Tcl_GetVar(interp.externalAddressValue->contents,
+		Tcl_GetVar(Interp(env),
 			   varName.lexemeValue->contents,
 			   flagsContents));
 }
@@ -829,16 +815,14 @@ static void clips_Tcl_IsShared(
 static void clips_Tcl_ListObjAppendElement(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue listPtr;
 	UDFValue objPtr;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &listPtr);
-	UDFNthArgument(udfc, 3, EXTERNAL_ADDRESS_BIT, &objPtr);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &listPtr);
+	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &objPtr);
 
 	int r = Tcl_ListObjAppendElement(
-		interp.externalAddressValue->contents,
+		Interp(env),
 		listPtr.externalAddressValue->contents,
 		objPtr.externalAddressValue->contents);
 
@@ -857,15 +841,13 @@ static void clips_Tcl_ListObjAppendElement(
 static void clips_Tcl_ListObjGetElements(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue listPtr;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &listPtr);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &listPtr);
 
 	int objc;
 	Tcl_Obj **objv;
-	int r = Tcl_ListObjGetElements(interp.externalAddressValue->contents,
+	int r = Tcl_ListObjGetElements(Interp(env),
 				       listPtr.externalAddressValue->contents,
 				       &objc,
 				       &objv);
@@ -963,13 +945,11 @@ static void clips_Tcl_NewStringObj(
 static void clips_Tcl_OpenCommandChannel(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue argv;
 	UDFValue flags;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, MULTIFIELD_BIT, &argv);
-	UDFNthArgument(udfc, 3, SYMBOL_BIT, &flags);
+	UDFNthArgument(udfc, 1, MULTIFIELD_BIT, &argv);
+	UDFNthArgument(udfc, 2, SYMBOL_BIT, &flags);
 
 	int argc = argv.multifieldValue->length;
 
@@ -1024,10 +1004,7 @@ static void clips_Tcl_OpenCommandChannel(
 	}
 
 	Tcl_Channel r = Tcl_OpenCommandChannel(
-		interp.externalAddressValue->contents,
-		argc,
-		argvContents,
-		flagsContents);
+		Interp(env), argc, argvContents, flagsContents);
 
 	if (r == NULL)
 		out->lexemeValue = NilSymbol(env);
@@ -1041,19 +1018,17 @@ static void clips_Tcl_OpenCommandChannel(
 static void clips_Tcl_OpenTcpClient(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue port;
 	UDFValue host;
 	UDFValue myaddr;
 	UDFValue myport;
 	UDFValue async;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, INTEGER_BIT, &port);
-	UDFNthArgument(udfc, 3, STRING_BIT, &host);
-	UDFNthArgument(udfc, 4, BOOLEAN_BIT | STRING_BIT, &myaddr);
-	UDFNthArgument(udfc, 5, INTEGER_BIT, &myport);
-	UDFNthArgument(udfc, 6, BOOLEAN_BIT, &async);
+	UDFNthArgument(udfc, 1, INTEGER_BIT, &port);
+	UDFNthArgument(udfc, 2, STRING_BIT, &host);
+	UDFNthArgument(udfc, 3, BOOLEAN_BIT | STRING_BIT, &myaddr);
+	UDFNthArgument(udfc, 4, INTEGER_BIT, &myport);
+	UDFNthArgument(udfc, 5, BOOLEAN_BIT, &async);
 
 	bool asyncContents = (async.value == TrueSymbol(env));
 
@@ -1067,7 +1042,7 @@ static void clips_Tcl_OpenTcpClient(
 
 	out->externalAddressValue = CreateExternalAddress(
 		env,
-		Tcl_OpenTcpClient(interp.externalAddressValue->contents,
+		Tcl_OpenTcpClient(Interp(env),
 				  port.integerValue->contents,
 				  host.lexemeValue->contents,
 				  myaddrContents,
@@ -1120,17 +1095,15 @@ static void clips_Tcl_OpenTcpServerCloseProc(
 static void clips_Tcl_OpenTcpServer(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue port;
 	UDFValue myaddr;
 	UDFValue proc;
 	UDFValue clientData;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, INTEGER_BIT, &port);
-	UDFNthArgument(udfc, 3, BOOLEAN_BIT | STRING_BIT, &myaddr);
-	UDFNthArgument(udfc, 4, SYMBOL_BIT, &proc);
-	UDFNthArgument(udfc, 5, ANY_TYPE_BITS, &clientData);
+	UDFNthArgument(udfc, 1, INTEGER_BIT, &port);
+	UDFNthArgument(udfc, 2, BOOLEAN_BIT | STRING_BIT, &myaddr);
+	UDFNthArgument(udfc, 3, SYMBOL_BIT, &proc);
+	UDFNthArgument(udfc, 4, ANY_TYPE_BITS, &clientData);
 
 	const char *myaddrContents;
 	if (myaddr.header->type == SYMBOL_TYPE) {
@@ -1147,7 +1120,7 @@ static void clips_Tcl_OpenTcpServer(
 	clientDataContents[2] = clientData.value;
 
 	Tcl_Channel r = Tcl_OpenTcpServer(
-		interp.externalAddressValue->contents,
+		Interp(env),
 		port.integerValue->contents,
 		myaddrContents,
 		clips_Tcl_TcpAcceptProc,
@@ -1164,30 +1137,26 @@ static void clips_Tcl_OpenTcpServer(
 static void clips_Tcl_RegisterChannel(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue channel;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &channel);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
 
-	Tcl_RegisterChannel(interp.externalAddressValue->contents,
+	Tcl_RegisterChannel(Interp(env),
 			    channel.externalAddressValue->contents);
 }
 
 static void clips_Tcl_SetChannelOption(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue channel;
 	UDFValue optionName;
 	UDFValue newValue;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, EXTERNAL_ADDRESS_BIT, &channel);
-	UDFNthArgument(udfc, 3, STRING_BIT, &optionName);
-	UDFNthArgument(udfc, 4, STRING_BIT, &newValue);
+	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &channel);
+	UDFNthArgument(udfc, 2, STRING_BIT, &optionName);
+	UDFNthArgument(udfc, 3, STRING_BIT, &newValue);
 
-	int r = Tcl_SetChannelOption(interp.externalAddressValue->contents,
+	int r = Tcl_SetChannelOption(Interp(env),
 				     channel.externalAddressValue->contents,
 				     optionName.lexemeValue->contents,
 				     newValue.lexemeValue->contents);
@@ -1246,18 +1215,14 @@ static void clips_Tcl_Sleep(
 static void clips_Tcl_SplitList(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
-	UDFValue interp;
 	UDFValue list;
 
-	UDFNthArgument(udfc, 1, EXTERNAL_ADDRESS_BIT, &interp);
-	UDFNthArgument(udfc, 2, STRING_BIT, &list);
+	UDFNthArgument(udfc, 1, STRING_BIT, &list);
 
 	int argc;
 	const char **argv;
-	int r = Tcl_SplitList(interp.externalAddressValue->contents,
-			      list.lexemeValue->contents,
-			      &argc,
-			      &argv);
+	int r = Tcl_SplitList(
+		Interp(env), list.lexemeValue->contents, &argc, &argv);
 
 	if (r == TCL_OK) {
 		MultifieldBuilder *mb = CreateMultifieldBuilder(env, argc);
@@ -1324,6 +1289,7 @@ static void clips_Tcl_WriteRaw(
 
 static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
 {
+	Tcl_DeleteInterp(Interp(env));
 	ReleaseLexeme(env, OkFlag(env));
 	ReleaseLexeme(env, ErrorFlag(env));
 	ReleaseLexeme(env, ZeroFlag(env));
@@ -1333,21 +1299,19 @@ static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
 void UserFunctions(Environment *env)
 {
 	AllocateEnvironmentData(
-		env, OK_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
-	AllocateEnvironmentData(
-		env, ERROR_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
-	AllocateEnvironmentData(
-		env, ZERO_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
-	AllocateEnvironmentData(
-		env, MINUS_ONE_FLAG_DATA_ID, sizeof (CLIPSLexeme *), NULL);
-	AllocateEnvironmentData(
-		env, NIL_SYMBOL_DATA_ID, sizeof (CLIPSLexeme *), NULL);
+		env,
+		USER_ENVIRONMENT_DATA,
+		sizeof (CLIPS_Tcl_EnvironmentData), NULL);
 
-	RetainLexeme(env, OkFlag(env) = CreateSymbol(env, "/ok/"));
-	RetainLexeme(env, ErrorFlag(env) = CreateSymbol(env, "/error/"));
-	RetainLexeme(env, ZeroFlag(env) = CreateSymbol(env, "/0/"));
-	RetainLexeme(env, MinusOneFlag(env) = CreateSymbol(env, "/-1/"));
-	RetainLexeme(env, NilSymbol(env) = CreateSymbol(env, "nil"));
+	CLIPS_Tcl_EnvironmentData *data = GetEnvironmentData(
+		env, USER_ENVIRONMENT_DATA);
+
+	data->interp = Tcl_CreateInterp();
+	RetainLexeme(env, data->okFlag = CreateSymbol(env, "/ok/"));
+	RetainLexeme(env, data->errorFlag = CreateSymbol(env, "/error/"));
+	RetainLexeme(env, data->zeroFlag = CreateSymbol(env, "/0/"));
+	RetainLexeme(env, data->minusOneFlag = CreateSymbol(env, "/-1/"));
+	RetainLexeme(env, data->nilSymbol = CreateSymbol(env, "nil"));
 
 	// According to manual, priority -2000 to 2000 are reserved by CLIPS.
 	AddEnvironmentCleanupFunction(
@@ -1361,7 +1325,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_AllocStatBuf,
 	       "clips_Tcl_AllocStatBuf", NULL);
 
-	AddUDF(env, "tcl-append-format-to-obj", "v", 4, 4, ";e;e;s;m",
+	AddUDF(env, "tcl-append-format-to-obj", "v", 3, 3, ";e;s;m",
 	       clips_Tcl_AppendFormatToObj,
 	       "clips_Tcl_AppendFormatToObj", NULL);
 
@@ -1369,7 +1333,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_AppendToObj,
 	       "clips_Tcl_AppendToObj", NULL);
 
-	AddUDF(env, "tcl-close", "l", 2, 2, ";e;e",
+	AddUDF(env, "tcl-close", "l", 1, 1, ";e",
 	       clips_Tcl_Close,
 	       "clips_Tcl_Close", NULL);
 
@@ -1397,15 +1361,15 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_DuplicateObj,
 	       "clips_Tcl_DuplicateObj", NULL);
 
-	AddUDF(env, "tcl-eval-ex", "y", 4, 4, ";e;s;l;y",
+	AddUDF(env, "tcl-eval-ex", "y", 3, 3, ";s;l;y",
 	       clips_Tcl_EvalEx,
 	       "clips_Tcl_EvalEx", NULL);
 
-	AddUDF(env, "tcl-eval-obj-ex", "y", 3, 3, ";e;e;y",
+	AddUDF(env, "tcl-eval-obj-ex", "y", 2, 2, ";e;y",
 	       clips_Tcl_EvalObjEx,
 	       "clips_Tcl_EvalObjEx", NULL);
 
-	AddUDF(env, "tcl-eval-objv", "y", 3, 3, ";e;m;y",
+	AddUDF(env, "tcl-eval-objv", "y", 2, 2, ";m;y",
 	       clips_Tcl_EvalObjv,
 	       "clips_Tcl_EvalObjv", NULL);
 
@@ -1413,7 +1377,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_Flush,
 	       "clips_Tcl_Flush", NULL);
 
-	AddUDF(env, "tcl-format", "e", 3, 3, ";e;s;m",
+	AddUDF(env, "tcl-format", "e", 2, 2, ";s;m",
 	       clips_Tcl_Format,
 	       "clips_Tcl_Format", NULL);
 
@@ -1449,11 +1413,11 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_GetModificationTimeFromStat,
 	       "clips_Tcl_GetModificationTimeFromStat", NULL);
 
-	AddUDF(env, "tcl-get-obj-result", "e", 1, 1, ";e",
+	AddUDF(env, "tcl-get-obj-result", "e", 0, 0, "",
 	       clips_Tcl_GetObjResult,
 	       "clips_Tcl_GetObjResult", NULL);
 
-	AddUDF(env, "tcl-get-return-options", "e", 2, 2, ";e;y",
+	AddUDF(env, "tcl-get-return-options", "e", 1, 1, ";y",
 	       clips_Tcl_GetReturnOptions,
 	       "clips_Tcl_GetReturnOptions", NULL);
 
@@ -1465,11 +1429,11 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_GetString,
 	       "clips_Tcl_GetString", NULL);
 
-	AddUDF(env, "tcl-get-string-result", "s", 1, 1, ";e",
+	AddUDF(env, "tcl-get-string-result", "s", 0, 0, "",
 	       clips_Tcl_GetStringResult,
 	       "clips_Tcl_GetStringResult", NULL);
 
-	AddUDF(env, "tcl-get-var", "s", 3, 3, ";e;s;y",
+	AddUDF(env, "tcl-get-var", "s", 2, 2, ";s;y",
 	       clips_Tcl_GetVar,
 	       "clips_Tcl_GetVar", NULL);
 
@@ -1485,11 +1449,11 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_IsShared,
 	       "clips_Tcl_IsShared", NULL);
 
-	AddUDF(env, "tcl-list-obj-append-element", "y", 3, 3, ";e;e;e",
+	AddUDF(env, "tcl-list-obj-append-element", "y", 2, 2, ";e;e",
 	       clips_Tcl_ListObjAppendElement,
 	       "clips_Tcl_ListObjAppendElement", NULL);
 
-	AddUDF(env, "tcl-list-obj-get-elements", "my", 2, 2, ";e;e",
+	AddUDF(env, "tcl-list-obj-get-elements", "my", 1, 1, ";e",
 	       clips_Tcl_ListObjGetElements,
 	       "clips_Tcl_ListObjGetElements", NULL);
 
@@ -1509,23 +1473,23 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_NewStringObj,
 	       "clips_Tcl_NewStringObj", NULL);
 
-	AddUDF(env, "tcl-open-command-channel", "ey", 3, 3, ";e;m;y",
+	AddUDF(env, "tcl-open-command-channel", "ey", 2, 2, ";m;y",
 	       clips_Tcl_OpenCommandChannel,
 	       "clips_Tcl_OpenCommandChannel", NULL);
 
-	AddUDF(env, "tcl-open-tcp-client", "e", 6, 6, ";e;l;s;bs;l;b",
+	AddUDF(env, "tcl-open-tcp-client", "e", 5, 5, ";l;s;bs;l;b",
 	       clips_Tcl_OpenTcpClient,
 	       "clips_Tcl_OpenTcpClient", NULL);
 
-	AddUDF(env, "tcl-open-tcp-server", "e", 5, 5, ";e;l;bs;y;*",
+	AddUDF(env, "tcl-open-tcp-server", "e", 4, 4, ";l;bs;y;*",
 	       clips_Tcl_OpenTcpServer,
 	       "clips_Tcl_OpenTcpServer", NULL);
 
-	AddUDF(env, "tcl-register-channel", "v", 2, 2, ";e;e",
+	AddUDF(env, "tcl-register-channel", "v", 1, 1, ";e",
 	       clips_Tcl_RegisterChannel,
 	       "clips_Tcl_RegisterChannel", NULL);
 
-	AddUDF(env, "tcl-set-channel-option", "y", 4, 4, ";e;e;s;s",
+	AddUDF(env, "tcl-set-channel-option", "y", 3, 3, ";e;s;s",
 	       clips_Tcl_SetChannelOption,
 	       "clips_Tcl_SetChannelOption", NULL);
 
@@ -1541,7 +1505,7 @@ void UserFunctions(Environment *env)
 	       clips_Tcl_Sleep,
 	       "clips_Tcl_Sleep", NULL);
 
-	AddUDF(env, "tcl-split-list", "my", 2, 2, ";e;s",
+	AddUDF(env, "tcl-split-list", "my", 1, 1, ";s",
 	       clips_Tcl_SplitList,
 	       "clips_Tcl_SplitList", NULL);
 
