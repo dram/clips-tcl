@@ -19,7 +19,9 @@
 ///    value for different types and using something like `/ok/` to
 ///    represent function call status.
 
-#define FLAG_BUF_LEN 23 // max int64 string length (20) with two '/' delimiter
+
+// Max string length of int64 (20), plus two '/' delimiters.
+static const int FLAG_BUF_LEN = 23;
 
 typedef struct clips_tcl_EnvironmentData {
 	Tcl_Interp *interp;
@@ -295,9 +297,8 @@ static void clips_Tcl_EvalEx(
 			   numBytes.integerValue->contents,
 			   flagsContents);
 
+	char buf[FLAG_BUF_LEN];
 	switch (r) {
-		char buf[FLAG_BUF_LEN];
-
 	case TCL_OK:
 		out->lexemeValue = OkFlag(env);
 		break;
@@ -349,9 +350,8 @@ static void clips_Tcl_EvalObjEx(
 			      objPtr.externalAddressValue->contents,
 			      flagsContents);
 
+	char buf[FLAG_BUF_LEN];
 	switch (r) {
-		char buf[FLAG_BUF_LEN];
-
 	case TCL_OK:
 		out->lexemeValue = OkFlag(env);
 		break;
@@ -411,9 +411,8 @@ static void clips_Tcl_EvalObjv(
 
 	int r = Tcl_EvalObjv(Interp(env), objc, objvContents, flagsContents);
 
+	char buf[FLAG_BUF_LEN];
 	switch (r) {
-		char buf[FLAG_BUF_LEN];
-
 	case TCL_OK:
 		out->lexemeValue = OkFlag(env);
 		break;
