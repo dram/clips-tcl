@@ -59,10 +59,10 @@ static inline CLIPSLexeme *NilSymbol(Environment *env) {
 }
 
 enum {
-	CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS = C_POINTER_EXTERNAL_ADDRESS + 1,
-	CLIPS_TCL_INTERP_EXTERNAL_ADDRESS,
-	CLIPS_TCL_OBJ_EXTERNAL_ADDRESS,
-	CLIPS_TCL_STAT_BUF_EXTERNAL_ADDRESS
+	CHANNEL_EXTERNAL_ADDRESS = C_POINTER_EXTERNAL_ADDRESS + 1,
+	INTERP_EXTERNAL_ADDRESS,
+	OBJ_EXTERNAL_ADDRESS,
+	STAT_BUF_EXTERNAL_ADDRESS
 };
 
 static void clips_Tcl_AllocStatBuf(
@@ -71,7 +71,7 @@ static void clips_Tcl_AllocStatBuf(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_AllocStatBuf(),
-		CLIPS_TCL_STAT_BUF_EXTERNAL_ADDRESS);
+		STAT_BUF_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_AppendFormatToObj(
@@ -163,7 +163,7 @@ static void clips_Tcl_CreateInterp(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_CreateInterp(),
-		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
+		INTERP_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_DecrRefCount(
@@ -250,7 +250,7 @@ static void clips_Tcl_DuplicateObj(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_DuplicateObj(objPtr.externalAddressValue->contents),
-		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+		OBJ_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_EvalEx(
@@ -474,7 +474,7 @@ static void clips_Tcl_Format(
 			   format.lexemeValue->contents,
 			   objc,
 			   objvContents),
-		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+		OBJ_EXTERNAL_ADDRESS);
 
 	genfree(env, objvContents, objvContentsSize);
 }
@@ -626,7 +626,7 @@ static void clips_Tcl_GetObjResult(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_GetObjResult(Interp(env)),
-		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
+		INTERP_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_GetReturnOptions(
@@ -647,7 +647,7 @@ static void clips_Tcl_GetReturnOptions(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_GetReturnOptions(Interp(env), codeContents),
-		CLIPS_TCL_INTERP_EXTERNAL_ADDRESS);
+		INTERP_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_GetStdChannel(
@@ -691,7 +691,7 @@ static void clips_Tcl_GetStdChannel(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_GetStdChannel(typeContents),
-		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+		CHANNEL_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_GetString(
@@ -860,7 +860,7 @@ static void clips_Tcl_ListObjGetElements(
 				CreateExternalAddress(
 					env,
 					objv[i],
-					CLIPS_TCL_OBJ_EXTERNAL_ADDRESS));
+					OBJ_EXTERNAL_ADDRESS));
 		out->multifieldValue = MBCreate(mb);
 		MBDispose(mb);
 	} else {
@@ -912,7 +912,7 @@ static void clips_Tcl_NewListObj(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_NewListObj(objc, objvContents),
-		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+		OBJ_EXTERNAL_ADDRESS);
 
 	genfree(env, objvContents, objvContentsSize);
 }
@@ -923,7 +923,7 @@ static void clips_Tcl_NewObj(
 	out->externalAddressValue = CreateExternalAddress(
 		env,
 		Tcl_NewObj(),
-		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+		OBJ_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_NewStringObj(
@@ -939,7 +939,7 @@ static void clips_Tcl_NewStringObj(
 		env,
 		Tcl_NewStringObj(bytes.lexemeValue->contents,
 				 length.integerValue->contents),
-		CLIPS_TCL_OBJ_EXTERNAL_ADDRESS);
+		OBJ_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_OpenCommandChannel(
@@ -1010,7 +1010,7 @@ static void clips_Tcl_OpenCommandChannel(
 		out->lexemeValue = NilSymbol(env);
 	else
 		out->externalAddressValue = CreateExternalAddress(
-			env, r, CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+			env, r, CHANNEL_EXTERNAL_ADDRESS);
 
 	genfree(env, argvContents, argvContentsSize);
 }
@@ -1048,7 +1048,7 @@ static void clips_Tcl_OpenTcpClient(
 				  myaddrContents,
 				  myport.integerValue->contents,
 				  asyncContents),
-		CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+		CHANNEL_EXTERNAL_ADDRESS);
 }
 
 static void clips_Tcl_TcpAcceptProc(
@@ -1061,7 +1061,7 @@ static void clips_Tcl_TcpAcceptProc(
 	void *argv[argc];
 	argv[0] = ((void **) clientData)[2];
 	argv[1] = CreateExternalAddress(
-		env, channel, CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+		env, channel, CHANNEL_EXTERNAL_ADDRESS);
 	argv[2] = CreateString(env, hostName);
 	argv[3] = CreateInteger(env, port);
 
@@ -1127,7 +1127,7 @@ static void clips_Tcl_OpenTcpServer(
 		clientDataContents);
 
 	out->externalAddressValue = CreateExternalAddress(
-		env, r, CLIPS_TCL_CHANNEL_EXTERNAL_ADDRESS);
+		env, r, CHANNEL_EXTERNAL_ADDRESS);
 
 	Tcl_CreateCloseHandler(r,
 			       clips_Tcl_OpenTcpServerCloseProc,
