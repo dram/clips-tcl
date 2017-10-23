@@ -1313,6 +1313,11 @@ void UserFunctions(Environment *env)
 	RetainLexeme(env, data->minusOneFlag = CreateSymbol(env, "/-1/"));
 	RetainLexeme(env, data->nilSymbol = CreateSymbol(env, "nil"));
 
+	Tcl_DString encoding;
+	Tcl_GetEncodingNameFromEnvironment(&encoding);
+	Tcl_SetSystemEncoding(data->interp, Tcl_DStringValue(&encoding));
+	Tcl_DStringFree(&encoding);
+
 	// According to manual, priority -2000 to 2000 are reserved by CLIPS.
 	AddEnvironmentCleanupFunction(
 		env,
