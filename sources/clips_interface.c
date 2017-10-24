@@ -6,6 +6,28 @@
 
 #include "interface.h"
 
+static Tcl_Obj *tcl_clips_ValueToObj(Environment *env, CLIPSValue *value)
+{
+	switch (value->header->type) {
+	case SYMBOL_TYPE:
+		if (value->value == TrueSymbol(env)) {
+			return Tcl_NewBooleanObj(true);
+		} else if (value->value == FalseSymbol(env)) {
+			return Tcl_NewBooleanObj(false);
+		} else {
+			return Tcl_NewStringObj(
+				value->lexemeValue->contents, -1);
+		}
+	case INTEGER_TYPE:
+		return Tcl_NewIntObj(value->integerValue->contents);
+	case STRING_TYPE:
+		return Tcl_NewStringObj(value->lexemeValue->contents, -1);
+	default:
+		assert(false);
+		return NULL;
+	}
+}
+
 static int tcl_CLIPS_AssertString(Tcl_Interp *interp,
 				  Environment *env,
 				  int objc,
@@ -44,7 +66,7 @@ static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
 	CLIPSValue v;
 	DefglobalGetValue(
 		*(void **) Tcl_GetByteArrayFromObj(objv[2], NULL), &v);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(v.integerValue->contents));
+	Tcl_SetObjResult(interp, tcl_clips_ValueToObj(env, &v));
 
 	return TCL_OK;
 }
