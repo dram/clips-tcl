@@ -1286,10 +1286,18 @@ static void clips_Tcl_WriteRaw(
 
 static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
 {
-	ReleaseLexeme(env, OkFlag(env));
-	ReleaseLexeme(env, ErrorFlag(env));
-	ReleaseLexeme(env, ZeroFlag(env));
-	ReleaseLexeme(env, MinusOneFlag(env));
+	// XXX: `ReleaseLexeme` Should be called before
+	//      `DestroyEnvironment`, or it will cause segmentation
+	//      fault.
+	//
+	//      Will those memory also be freed by
+	//      `DestroyEnvironment`, and may be no manual release is
+	//      needed?
+	// ReleaseLexeme(env, OkFlag(env));
+	// ReleaseLexeme(env, ErrorFlag(env));
+	// ReleaseLexeme(env, ZeroFlag(env));
+	// ReleaseLexeme(env, MinusOneFlag(env));
+	// ReleaseLexeme(env, NilSymbol(env));
 }
 
 void CLIPS_Tcl_InitializeTclInterface(Environment *env, Tcl_Interp *interp)
