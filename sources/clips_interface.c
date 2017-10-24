@@ -139,6 +139,69 @@ static int tcl_CLIPS_Run(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
+static int tcl_CLIPS_SetStrategy(Tcl_Interp *interp,
+				 Environment *env,
+				 int objc,
+				 Tcl_Obj *const objv[])
+{
+	int st;
+
+	const char *p = Tcl_GetString(objv[2]);
+
+	while (true) {
+		assert(*p == '/');
+
+		if (!*++p)
+			break;
+
+		switch (*p) {
+		case 'b':
+			assert(strncmp(p, "breadth-strategy", 16) == 0);
+			st |= BREADTH_STRATEGY;
+			p += 16;
+			break;
+		case 'c':
+			assert(strncmp(p, "complexity-strategy", 19) == 0);
+			st |= COMPLEXITY_STRATEGY;
+			p += 19;
+			break;
+		case 'd':
+			assert(strncmp(p, "depth-strategy", 14) == 0);
+			st |= DEPTH_STRATEGY;
+			p += 14;
+			break;
+		case 'l':
+			assert(strncmp(p, "lex-strategy", 12) == 0);
+			st |= LEX_STRATEGY;
+			p += 12;
+			break;
+		case 'm':
+			assert(strncmp(p, "mea-strategy", 12) == 0);
+			st |= MEA_STRATEGY;
+			p += 12;
+			break;
+		case 'r':
+			assert(strncmp(p, "random-strategy", 15) == 0);
+			st |= RANDOM_STRATEGY;
+			p += 15;
+			break;
+		case 's':
+			assert(strncmp(p, "simplicity-strategy", 19) == 0);
+			st |= SIMPLICITY_STRATEGY;
+			p += 19;
+			break;
+		default:
+			assert(false);
+		}
+	}
+
+	SetStrategy(env, st);
+
+	// TODO: Return old setting
+
+	return TCL_OK;
+}
+
 static int clips_Tcl_ObjCmdProc(ClientData clientData,
 				Tcl_Interp *interp,
 				int objc,
@@ -213,6 +276,10 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 			assert(false);
 		}
 		break;
+	case 's':
+		assert(strcmp(command, "set-strategy") == 0);
+		assert(objc == 3);
+		return tcl_CLIPS_SetStrategy(interp, env, objc, objv);
 	default:
 		assert(false);
 	}
