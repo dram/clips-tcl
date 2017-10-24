@@ -6,7 +6,7 @@
 
 #include "interface.h"
 
-static int tcl_clips_AssertString(Tcl_Interp *interp,
+static int tcl_CLIPS_AssertString(Tcl_Interp *interp,
 				  Environment *env,
 				  int objc,
 				  Tcl_Obj *const objv[])
@@ -16,7 +16,7 @@ static int tcl_clips_AssertString(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_BatchStar(Tcl_Interp *interp,
+static int tcl_CLIPS_BatchStar(Tcl_Interp *interp,
 			       Environment *env,
 			       int objc,
 			       Tcl_Obj *const objv[])
@@ -26,7 +26,7 @@ static int tcl_clips_BatchStar(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_Build(Tcl_Interp *interp,
+static int tcl_CLIPS_Build(Tcl_Interp *interp,
 			   Environment *env,
 			   int objc,
 			   Tcl_Obj *const objv[])
@@ -36,7 +36,7 @@ static int tcl_clips_Build(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_DefglobalGetValue(Tcl_Interp *interp,
+static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
 				       Environment *env,
 				       int objc,
 				       Tcl_Obj *const objv[])
@@ -49,7 +49,7 @@ static int tcl_clips_DefglobalGetValue(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_Eval(Tcl_Interp *interp,
+static int tcl_CLIPS_Eval(Tcl_Interp *interp,
 			  Environment *env,
 			  int objc,
 			  Tcl_Obj *const objv[])
@@ -59,7 +59,7 @@ static int tcl_clips_Eval(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_FindDefglobal(Tcl_Interp *interp,
+static int tcl_CLIPS_FindDefglobal(Tcl_Interp *interp,
 				   Environment *env,
 				   int objc,
 				   Tcl_Obj *const objv[])
@@ -75,7 +75,7 @@ static int tcl_clips_FindDefglobal(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_Load(Tcl_Interp *interp,
+static int tcl_CLIPS_Load(Tcl_Interp *interp,
 			  Environment *env,
 			  int objc,
 			  Tcl_Obj *const objv[])
@@ -85,7 +85,7 @@ static int tcl_clips_Load(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_LoadFacts(Tcl_Interp *interp,
+static int tcl_CLIPS_LoadFacts(Tcl_Interp *interp,
 			       Environment *env,
 			       int objc,
 			       Tcl_Obj *const objv[])
@@ -95,7 +95,7 @@ static int tcl_clips_LoadFacts(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_Reset(Tcl_Interp *interp,
+static int tcl_CLIPS_Reset(Tcl_Interp *interp,
 			   Environment *env,
 			   int objc,
 			   Tcl_Obj *const objv[])
@@ -105,7 +105,7 @@ static int tcl_clips_Reset(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
-static int tcl_clips_Run(Tcl_Interp *interp,
+static int tcl_CLIPS_Run(Tcl_Interp *interp,
 			 Environment *env,
 			 int objc,
 			 Tcl_Obj *const objv[])
@@ -136,17 +136,17 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 	case 'a':
 		assert(strcmp(command, "assert-string") == 0);
 		assert(objc == 3);
-		return tcl_clips_AssertString(interp, env, objc, objv);
+		return tcl_CLIPS_AssertString(interp, env, objc, objv);
 	case 'b':
 		switch (command[1]) {
 		case 'a':
 			assert(strcmp(command, "batch-star") == 0);
 			assert(objc == 3);
-			return tcl_clips_BatchStar(interp, env, objc, objv);
+			return tcl_CLIPS_BatchStar(interp, env, objc, objv);
 		case 'u':
 			assert(strcmp(command, "build") == 0);
 			assert(objc == 3);
-			return tcl_clips_Build(interp, env, objc, objv);
+			return tcl_CLIPS_Build(interp, env, objc, objv);
 		default:
 			assert(false);
 		}
@@ -154,25 +154,25 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 	case 'd':
 		assert(strcmp(command, "defglobal-get-value") == 0);
 		assert(objc == 3);
-		return tcl_clips_DefglobalGetValue(interp, env, objc, objv);
+		return tcl_CLIPS_DefglobalGetValue(interp, env, objc, objv);
 	case 'e':
 		assert(strcmp(command, "eval") == 0);
 		assert(objc == 3);
-		return tcl_clips_Eval(interp, env, objc, objv);
+		return tcl_CLIPS_Eval(interp, env, objc, objv);
 	case 'f':
 		assert(strcmp(command, "find-defglobal") == 0);
 		assert(objc == 3);
-		return tcl_clips_FindDefglobal(interp, env, objc, objv);
+		return tcl_CLIPS_FindDefglobal(interp, env, objc, objv);
 	case 'l':
 		switch (command[4]) {
 		case 0:
 			assert(strcmp(command, "load") == 0);
 			assert(objc == 3);
-			return tcl_clips_Load(interp, env, objc, objv);
+			return tcl_CLIPS_Load(interp, env, objc, objv);
 		case '-':
 			assert(strcmp(command, "load-facts") == 0);
 			assert(objc == 3);
-			return tcl_clips_LoadFacts(interp, env, objc, objv);
+			return tcl_CLIPS_LoadFacts(interp, env, objc, objv);
 		default:
 			assert(false);
 		}
@@ -182,11 +182,11 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 		case 'e':
 			assert(strcmp(command, "reset") == 0);
 			assert(objc == 2);
-			return tcl_clips_Reset(interp, env, objc, objv);
+			return tcl_CLIPS_Reset(interp, env, objc, objv);
 		case 'u':
 			assert(strcmp(command, "run") == 0);
 			assert(objc == 3);
-			return tcl_clips_Run(interp, env, objc, objv);
+			return tcl_CLIPS_Run(interp, env, objc, objv);
 		default:
 			assert(false);
 		}
