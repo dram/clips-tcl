@@ -1292,59 +1292,84 @@ static void clips_tcl_EnvironmentCleanupFunction(Environment *env)
 	ReleaseLexeme(env, MinusOneFlag(env));
 }
 
-static int tcl_clips_CmdProc(ClientData clientData,
-			     Tcl_Interp *interp,
-			     int argc,
-			     const char *argv[])
+static int clips_Tcl_ObjCmdProc(ClientData clientData,
+				Tcl_Interp *interp,
+				int objc,
+				Tcl_Obj *const objv[])
 {
-	Environment *env = (Environment *) clientData;
+	Environment *env = clientData;
 
-	if (argc < 2) {
+	if (objc < 2) {
 		Tcl_WrongNumArgs(
 			interp, 0, NULL, "clips command ...");
 		return TCL_ERROR;
 	}
 
-	const char *command = argv[1];
+	char *command = Tcl_GetString(objv[1]);
 
 	switch (command[0]) {
 	case 'a':
 		assert(strcmp(command, "assert-string") == 0);
-		assert(argc == 3);
-		AssertString(env, argv[2]);
+		assert(objc == 3);
+		AssertString(env, Tcl_GetString(objv[2]));
 		break;
 	case 'b':
 		switch (command[1]) {
 		case 'a':
 			assert(strcmp(command, "batch-star") == 0);
-			assert(argc == 3);
-			BatchStar(env, argv[2]);
+			assert(objc == 3);
+			BatchStar(env, Tcl_GetString(objv[2]));
 			break;
 		case 'u':
 			assert(strcmp(command, "build") == 0);
-			assert(argc == 3);
-			Build(env, argv[2]);
+			assert(objc == 3);
+			Build(env, Tcl_GetString(objv[2]));
 			break;
 		default:
 			assert(false);
 		}
 		break;
+	case 'd':
+		assert(strcmp(command, "defglobal-get-value") == 0);
+		assert(objc == 3);
+
+		CLIPSValue v;
+		DefglobalGetValue(
+			*(void **) Tcl_GetByteArrayFromObj(objv[2], NULL),
+			&v);
+		printf("%lld\n", v.integerValue->contents);
+		Tcl_SetObjResult(interp,
+				 Tcl_NewIntObj(
+					 v.integerValue->contents));
+		break;
 	case 'e':
 		assert(strcmp(command, "eval") == 0);
-		assert(argc == 3);
-		Eval(env, argv[2], NULL);
+		assert(objc == 3);
+		Eval(env, Tcl_GetString(objv[2]), NULL);
+		break;
+	case 'f':
+		assert(strcmp(command, "find-defglobal") == 0);
+		assert(objc == 3);
+		Defglobal *r = FindDefglobal(env, Tcl_GetString(objv[2]));
+		printf("##2 %p\n", r);
+		if (r == NULL) {
+		} else {
+			Tcl_SetObjResult(interp,
+					 Tcl_NewByteArrayObj(
+						 (void *) &r, sizeof(r)));
+		}
 		break;
 	case 'l':
 		switch (command[4]) {
 		case 0:
 			assert(strcmp(command, "load") == 0);
-			assert(argc == 3);
-			Load(env, argv[2]);
+			assert(objc == 3);
+			Load(env, Tcl_GetString(objv[2]));
 			break;
 		case '-':
 			assert(strcmp(command, "load-facts") == 0);
-			assert(argc == 3);
-			LoadFacts(env, argv[2]);
+			assert(objc == 3);
+			LoadFacts(env, Tcl_GetString(objv[2]));
 			break;
 		default:
 			assert(false);
@@ -1354,13 +1379,15 @@ static int tcl_clips_CmdProc(ClientData clientData,
 		switch (command[1]) {
 		case 'e':
 			assert(strcmp(command, "reset") == 0);
-			assert(argc == 2);
+			assert(objc == 2);
 			Reset(env);
 			break;
 		case 'u':
 			assert(strcmp(command, "run") == 0);
-			assert(argc == 3);
-			Run(env, atoll(argv[2]));
+			assert(objc == 3);
+			int i;
+			Tcl_GetIntFromObj(interp, objv[2], &i);
+			Run(env, i);
 			break;
 		default:
 			assert(false);
@@ -1380,7 +1407,7 @@ void InitializeTcl(Tcl_Interp *tcl, Environment *env)
 	Tcl_SetSystemEncoding(tcl, Tcl_DStringValue(&encoding));
 	Tcl_DStringFree(&encoding);
 
-	Tcl_CreateCommand(tcl, "clips", tcl_clips_CmdProc, env, NULL);
+	Tcl_CreateObjCommand(tcl, "clips", clips_Tcl_ObjCmdProc, env, NULL);
 }
 
 void CLIPS_Tcl_Interface(Environment *env, Tcl_Interp *interp)
