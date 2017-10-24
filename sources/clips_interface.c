@@ -6,26 +6,47 @@
 
 #include "interface.h"
 
-static Tcl_Obj *tcl_clips_ValueToObj(Environment *env, CLIPSValue *value)
+static Tcl_Obj *tcl_clips_ValueToObj(
+	Environment *env, Tcl_Interp *interp, CLIPSValue *value)
 {
+	Tcl_Obj *obj = NULL;
+
 	switch (value->header->type) {
+	case INTEGER_TYPE:
+		obj = Tcl_NewIntObj(value->integerValue->contents);
+		break;
+	case MULTIFIELD_TYPE:
+		obj = Tcl_NewObj();
+
+		Multifield *m = value->multifieldValue;
+		for (int i = 0; i < m->length; ++i) {
+			Tcl_ListObjAppendElement(
+				interp,
+				obj,
+				tcl_clips_ValueToObj(
+					env, interp, &m->contents[i]));
+		}
+		break;
+	case STRING_TYPE:
+		obj = Tcl_NewStringObj(value->lexemeValue->contents, -1);
+		break;
 	case SYMBOL_TYPE:
 		if (value->value == TrueSymbol(env)) {
-			return Tcl_NewBooleanObj(true);
+			obj = Tcl_NewBooleanObj(true);
 		} else if (value->value == FalseSymbol(env)) {
-			return Tcl_NewBooleanObj(false);
+			obj = Tcl_NewBooleanObj(false);
 		} else {
-			return Tcl_NewStringObj(
+			obj = Tcl_NewStringObj(
 				value->lexemeValue->contents, -1);
 		}
-	case INTEGER_TYPE:
-		return Tcl_NewIntObj(value->integerValue->contents);
-	case STRING_TYPE:
-		return Tcl_NewStringObj(value->lexemeValue->contents, -1);
+		break;
+	case VOID_TYPE:
+		break;
 	default:
 		assert(false);
-		return NULL;
 	}
+
+	return obj;
 }
 
 static int tcl_CLIPS_AssertString(Tcl_Interp *interp,
@@ -33,9 +54,15 @@ static int tcl_CLIPS_AssertString(Tcl_Interp *interp,
 				  int objc,
 				  Tcl_Obj *const objv[])
 {
-	AssertString(env, Tcl_GetString(objv[2]));
+	Fact *r = AssertString(env, Tcl_GetString(objv[2]));
 
-	return TCL_OK;
+	if (r == NULL) {
+		return TCL_ERROR;
+	} else {
+		Tcl_SetObjResult(interp,
+				 Tcl_NewByteArrayObj((void *) &r, sizeof(r)));
+		return TCL_OK;
+	}
 }
 
 static int tcl_CLIPS_BatchStar(Tcl_Interp *interp,
@@ -53,9 +80,12 @@ static int tcl_CLIPS_Build(Tcl_Interp *interp,
 			   int objc,
 			   Tcl_Obj *const objv[])
 {
-	Build(env, Tcl_GetString(objv[2]));
+	bool r = Build(env, Tcl_GetString(objv[2]));
 
-	return TCL_OK;
+	if (r)
+		return TCL_OK;
+	else
+		return TCL_ERROR;
 }
 
 static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
@@ -63,10 +93,13 @@ static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
 				       int objc,
 				       Tcl_Obj *const objv[])
 {
-	CLIPSValue v;
-	DefglobalGetValue(
-		*(void **) Tcl_GetByteArrayFromObj(objv[2], NULL), &v);
-	Tcl_SetObjResult(interp, tcl_clips_ValueToObj(env, &v));
+	CLIPSValue value;
+
+	Defglobal **p = (void *) Tcl_GetByteArrayFromObj(objv[2], NULL);
+
+	DefglobalGetValue(*p, &value);
+
+	Tcl_SetObjResult(interp, tcl_clips_ValueToObj(env, interp, &value));
 
 	return TCL_OK;
 }
@@ -76,9 +109,22 @@ static int tcl_CLIPS_Eval(Tcl_Interp *interp,
 			  int objc,
 			  Tcl_Obj *const objv[])
 {
-	Eval(env, Tcl_GetString(objv[2]), NULL);
+	CLIPSValue value;
 
-	return TCL_OK;
+	bool r = Eval(env, Tcl_GetString(objv[2]), &value);
+
+	if (r) {
+		Tcl_Obj *obj = tcl_clips_ValueToObj(env, interp, &value);
+
+		if (obj == NULL)
+			Tcl_ResetResult(interp);
+		else
+			Tcl_SetObjResult(interp, obj);
+
+		return TCL_OK;
+	} else {
+		return TCL_ERROR;
+	}
 }
 
 static int tcl_CLIPS_FindDefglobal(Tcl_Interp *interp,
@@ -102,9 +148,12 @@ static int tcl_CLIPS_Load(Tcl_Interp *interp,
 			  int objc,
 			  Tcl_Obj *const objv[])
 {
-	Load(env, Tcl_GetString(objv[2]));
+	int r = Load(env, Tcl_GetString(objv[2]));
 
-	return TCL_OK;
+	if (r > 0)
+		return TCL_OK;
+	else
+		return TCL_ERROR;
 }
 
 static int tcl_CLIPS_LoadFacts(Tcl_Interp *interp,
@@ -134,7 +183,10 @@ static int tcl_CLIPS_Run(Tcl_Interp *interp,
 {
 	int limit;
 	Tcl_GetIntFromObj(interp, objv[2], &limit);
-	Run(env, limit);
+
+	int r = Run(env, limit);
+
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(r));
 
 	return TCL_OK;
 }
