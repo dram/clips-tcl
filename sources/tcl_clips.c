@@ -21,7 +21,7 @@ static int AppInit(Tcl_Interp *interp)
 
 	Tcl_CreateExitHandler(ExitProc, env);
 
-	CLIPS_Tcl_Interface(env, interp);
+	CLIPS_Tcl_InitializeInterface(env, interp);
 
 	return TCL_OK;
 }

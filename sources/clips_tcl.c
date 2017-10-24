@@ -20,5 +20,5 @@ void UserFunctions(Environment *env)
 	AddEnvironmentCleanupFunction(
 		env, "CleanupFunction", CleanupFunction, 5000);
 
-	CLIPS_Tcl_Interface(env, interp);
+	CLIPS_Tcl_InitializeInterface(env, interp);
 }
