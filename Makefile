@@ -7,7 +7,7 @@ OS = Linux
 endif
 
 all:
-	$(MAKE) PLATFORM=$(OS) -C sources/clips libclips.a main.o
+	$(MAKE) PLATFORM=$(OS) -C sources/clips debug
 	$(MAKE) PLATFORM=$(OS) -C sources clips-tcl tcl-clips
 
 shell:

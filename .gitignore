@@ -1,4 +1,5 @@
 *.a
 *.o
+sources/clips/clips
 sources/clips-tcl
 sources/tcl-clips
