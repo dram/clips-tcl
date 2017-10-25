@@ -17,6 +17,8 @@ static void ExitProc(ClientData clientData)
 
 static int AppInit(Tcl_Interp *interp)
 {
+	Tcl_Init(interp);
+
 	Environment *env = CreateEnvironment();
 
 	Tcl_CreateExitHandler(ExitProc, env);
