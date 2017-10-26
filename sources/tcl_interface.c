@@ -571,6 +571,22 @@ static void clips_Tcl_GetBooleanFromObj(
 	}
 }
 
+static void clips_Tcl_GetChannel(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue channelName;
+
+	UDFNthArgument(udfc, 1, STRING_BIT, &channelName);
+
+	// TODO: Return channel modes
+	out->externalAddressValue = CreateExternalAddress(
+		env,
+		Tcl_GetChannel(Interp(env),
+			       channelName.lexemeValue->contents,
+			       NULL),
+		CHANNEL_EXTERNAL_ADDRESS);
+}
+
 static void clips_Tcl_GetCharLength(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1409,6 +1425,10 @@ void CLIPS_Tcl_InitializeTclInterface(Environment *env, Tcl_Interp *interp)
 	AddUDF(env, "tcl-get-boolean-from-obj", "by", 1, 1, ";e",
 	       clips_Tcl_GetBooleanFromObj,
 	       "clips_Tcl_GetBooleanFromObj", NULL);
+
+	AddUDF(env, "tcl-get-channel", "e", 1, 1, ";s",
+	       clips_Tcl_GetChannel,
+	       "clips_Tcl_GetChannel", NULL);
 
 	AddUDF(env, "tcl-get-char-length", "l", 1, 1, ";e",
 	       clips_Tcl_GetCharLength,
