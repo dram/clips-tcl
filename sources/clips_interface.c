@@ -194,12 +194,36 @@ static int tcl_CLIPS_LoadFacts(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
+static int tcl_CLIPS_ReleaseLexeme(Tcl_Interp *interp,
+				   Environment *env,
+				   int objc,
+				   Tcl_Obj *const objv[])
+{
+	CLIPSLexeme **value = (void *) Tcl_GetByteArrayFromObj(objv[2], NULL);
+
+	ReleaseLexeme(env, *value);
+
+	return TCL_OK;
+}
+
 static int tcl_CLIPS_Reset(Tcl_Interp *interp,
 			   Environment *env,
 			   int objc,
 			   Tcl_Obj *const objv[])
 {
 	Reset(env);
+
+	return TCL_OK;
+}
+
+static int tcl_CLIPS_RetainLexeme(Tcl_Interp *interp,
+				  Environment *env,
+				  int objc,
+				  Tcl_Obj *const objv[])
+{
+	CLIPSLexeme **value = (void *) Tcl_GetByteArrayFromObj(objv[2], NULL);
+
+	RetainLexeme(env, *value);
 
 	return TCL_OK;
 }
@@ -499,15 +523,24 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 		}
 		break;
 	case 'r':
-		switch (command[1]) {
-		case 'e':
-			assert(strcmp(command, "reset") == 0);
-			assert(objc == 2);
-			return tcl_CLIPS_Reset(interp, env, objc, objv);
-		case 'u':
+		switch (command[2]) {
+		case 'l':
+			assert(strcmp(command, "release-lexeme") == 0);
+			assert(objc == 3);
+			return tcl_CLIPS_ReleaseLexeme(interp,
+						       env, objc, objv);
+		case 'n':
 			assert(strcmp(command, "run") == 0);
 			assert(objc == 3);
 			return tcl_CLIPS_Run(interp, env, objc, objv);
+		case 's':
+			assert(strcmp(command, "reset") == 0);
+			assert(objc == 2);
+			return tcl_CLIPS_Reset(interp, env, objc, objv);
+		case 't':
+			assert(strcmp(command, "retain-lexeme") == 0);
+			assert(objc == 3);
+			return tcl_CLIPS_RetainLexeme(interp, env, objc, objv);
 		default:
 			assert(false);
 		}
