@@ -254,6 +254,146 @@ static int tcl_CLIPS_SetStrategy(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
+static int tcl_clips_ParseWatchOptions(const char *p)
+{
+	int item = 0;
+
+	while (true) {
+		assert(*p == '/');
+
+		if (!*++p)
+			break;
+
+		switch (*p) {
+		case 'a':
+			switch (p[1]) {
+			case 'l':
+				assert(strncmp(p, "all", 3) == 0);
+				item |= ALL;
+				p += 3;
+				break;
+			case 'c':
+				assert(strncmp(p, "activations", 11) == 0);
+				item |= ACTIVATIONS;
+				p += 11;
+				break;
+			}
+			break;
+		case 'c':
+			assert(strncmp(p, "compilations", 12) == 0);
+			item |= COMPILATIONS;
+			p += 12;
+			break;
+		case 'd':
+			assert(strncmp(p, "deffunctions", 12) == 0);
+			item |= DEFFUNCTIONS;
+			p += 12;
+			break;
+		case 'f':
+			switch (p[1]) {
+			case 'a':
+				assert(strncmp(p, "facts", 5) == 0);
+				item |= FACTS;
+				p += 5;
+				break;
+			case 'o':
+				assert(strncmp(p, "focus", 5) == 0);
+				item |= FOCUS;
+				p += 5;
+				break;
+			}
+			break;
+		case 'g':
+			switch (p[1]) {
+			case 'e':
+				assert(strncmp(p,
+					       "generic-functions", 17) == 0);
+				item |= GENERIC_FUNCTIONS;
+				p += 17;
+				break;
+			case 'l':
+				assert(strncmp(p, "globals", 7) == 0);
+				item |= GLOBALS;
+				p += 7;
+				break;
+			}
+			break;
+		case 'i':
+			assert(strncmp(p, "instances", 9) == 0);
+			item |= INSTANCES;
+			p += 9;
+			break;
+		case 'm':
+			switch (p[7]) {
+			case 0:
+				assert(strncmp(p, "methods", 7) == 0);
+				item |= METHODS;
+				p += 7;
+				break;
+			case '-':
+				assert(strncmp(p,
+					       "message-handlers", 16) == 0);
+				item |= MESSAGE_HANDLERS;
+				p += 16;
+				break;
+			case 's':
+				assert(strncmp(p, "messages", 8) == 0);
+				item |= MESSAGES;
+				p += 8;
+				break;
+			}
+			break;
+		case 's':
+			switch (p[1]) {
+			case 'l':
+				assert(strncmp(p, "slots", 5) == 0);
+				item |= SLOTS;
+				p += 5;
+				break;
+			case 't':
+				assert(strncmp(p, "statistics", 12) == 0);
+				item |= STATISTICS;
+				p += 12;
+				break;
+			}
+			break;
+		case 'r':
+			assert(strncmp(p, "rules", 5) == 0);
+			item |= RULES;
+			p += 5;
+			break;
+		default:
+			assert(false);
+		}
+	}
+
+	return item;
+}
+
+static int tcl_CLIPS_Unwatch(Tcl_Interp *interp,
+			     Environment *env,
+			     int objc,
+			     Tcl_Obj *const objv[])
+{
+	const char *p = Tcl_GetString(objv[2]);
+
+	Unwatch(env, tcl_clips_ParseWatchOptions(p));
+
+	return TCL_OK;
+}
+
+static int tcl_CLIPS_Watch(Tcl_Interp *interp,
+			   Environment *env,
+			   int objc,
+			   Tcl_Obj *const objv[])
+{
+	const char *p = Tcl_GetString(objv[2]);
+
+	Watch(env, tcl_clips_ParseWatchOptions(p));
+
+	return TCL_OK;
+}
+
 static int clips_Tcl_ObjCmdProc(ClientData clientData,
 				Tcl_Interp *interp,
 				int objc,
@@ -332,6 +472,14 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 		assert(strcmp(command, "set-strategy") == 0);
 		assert(objc == 3);
 		return tcl_CLIPS_SetStrategy(interp, env, objc, objv);
+	case 'u':
+		assert(strcmp(command, "unwatch") == 0);
+		assert(objc == 3);
+		return tcl_CLIPS_Unwatch(interp, env, objc, objv);
+	case 'w':
+		assert(strcmp(command, "watch") == 0);
+		assert(objc == 3);
+		return tcl_CLIPS_Watch(interp, env, objc, objv);
 	default:
 		assert(false);
 	}
