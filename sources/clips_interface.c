@@ -12,6 +12,9 @@ static Tcl_Obj *tcl_clips_ValueToObj(
 	Tcl_Obj *obj = NULL;
 
 	switch (value->header->type) {
+	case EXTERNAL_ADDRESS_TYPE:
+		obj = value->externalAddressValue->contents;
+		break;
 	case INTEGER_TYPE:
 		obj = Tcl_NewIntObj(value->integerValue->contents);
 		break;
