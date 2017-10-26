@@ -199,7 +199,7 @@ static int tcl_CLIPS_SetStrategy(Tcl_Interp *interp,
 				 int objc,
 				 Tcl_Obj *const objv[])
 {
-	int st;
+	int st = 0;
 
 	const char *p = Tcl_GetString(objv[2]);
 
