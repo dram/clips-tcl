@@ -91,6 +91,18 @@ static int tcl_CLIPS_Build(Tcl_Interp *interp,
 		return TCL_ERROR;
 }
 
+static int tcl_CLIPS_CreateString(Tcl_Interp *interp,
+				  Environment *env,
+				  int objc,
+				  Tcl_Obj *const objv[])
+{
+	CLIPSLexeme *v = CreateString(env, Tcl_GetString(objv[2]));
+
+	Tcl_SetObjResult(interp, Tcl_NewByteArrayObj((void *) &v, sizeof(v)));
+
+	return TCL_OK;
+}
+
 static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
 				       Environment *env,
 				       int objc,
@@ -103,6 +115,19 @@ static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
 	DefglobalGetValue(*p, &value);
 
 	Tcl_SetObjResult(interp, tcl_clips_ValueToObj(env, interp, &value));
+
+	return TCL_OK;
+}
+
+static int tcl_CLIPS_DefglobalSetValue(Tcl_Interp *interp,
+				       Environment *env,
+				       int objc,
+				       Tcl_Obj *const objv[])
+{
+	Defglobal **d = (void *) Tcl_GetByteArrayFromObj(objv[2], NULL);
+	CLIPSValue **in = (void *) Tcl_GetByteArrayFromObj(objv[3], NULL);
+
+	DefglobalSetValue(*d, *in);
 
 	return TCL_OK;
 }
@@ -431,10 +456,26 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 			assert(false);
 		}
 		break;
-	case 'd':
-		assert(strcmp(command, "defglobal-get-value") == 0);
+	case 'c':
+		assert(strcmp(command, "create-string") == 0);
 		assert(objc == 3);
-		return tcl_CLIPS_DefglobalGetValue(interp, env, objc, objv);
+		return tcl_CLIPS_CreateString(interp, env, objc, objv);
+	case 'd':
+		switch (command[10]) {
+		case 'g':
+			assert(strcmp(command, "defglobal-get-value") == 0);
+			assert(objc == 3);
+			return tcl_CLIPS_DefglobalGetValue(interp,
+							   env, objc, objv);
+		case 's':
+			assert(strcmp(command, "defglobal-set-value") == 0);
+			assert(objc == 4);
+			return tcl_CLIPS_DefglobalSetValue(interp,
+							   env, objc, objv);
+		default:
+			assert(false);
+		}
+		break;
 	case 'e':
 		assert(strcmp(command, "eval") == 0);
 		assert(objc == 3);
