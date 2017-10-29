@@ -293,7 +293,7 @@ static void clips_Tcl_EvalEx(
 	}
 
 	int r = Tcl_EvalEx(Interp(env),
-			   script.externalAddressValue->contents,
+			   script.lexemeValue->contents,
 			   numBytes.integerValue->contents,
 			   flagsContents);
 
