@@ -423,6 +423,34 @@ static void clips_Tcl_EvalObjv(
 	genfree(env, objvContents, objvContentsSize);
 }
 
+static void clips_Tcl_ExprBoolean(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue expr;
+
+	UDFNthArgument(udfc, 1, STRING_BIT, &expr);
+
+	int booleanPtr;
+
+	int r = Tcl_ExprBoolean(Interp(env),
+				expr.lexemeValue->contents,
+				&booleanPtr);
+
+	switch (r) {
+	case TCL_OK:
+		if (booleanPtr)
+			out->lexemeValue = TrueSymbol(env);
+		else
+			out->lexemeValue = FalseSymbol(env);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = ErrorFlag(env);
+		break;
+	default:
+		assert(false);
+	}
+}
+
 static void clips_Tcl_Flush(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1397,6 +1425,10 @@ void CLIPS_Tcl_InitializeTclInterface(Environment *env, Tcl_Interp *interp)
 	AddUDF(env, "tcl-eval-objv", "y", 2, 2, ";m;y",
 	       clips_Tcl_EvalObjv,
 	       "clips_Tcl_EvalObjv", NULL);
+
+	AddUDF(env, "tcl-expr-boolean", "by", 1, 1, ";s",
+	       clips_Tcl_ExprBoolean,
+	       "clips_Tcl_ExprBoolean", NULL);
 
 	AddUDF(env, "tcl-flush", "y", 1, 1, ";e",
 	       clips_Tcl_Flush,
