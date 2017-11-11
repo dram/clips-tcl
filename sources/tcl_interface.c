@@ -257,6 +257,28 @@ static void clips_Tcl_DuplicateObj(
 		OBJ_EXTERNAL_ADDRESS);
 }
 
+static void clips_Tcl_Eval(
+	Environment *env, UDFContext *udfc, UDFValue *out)
+{
+	UDFValue script;
+
+	UDFNthArgument(udfc, 1, STRING_BIT, &script);
+
+	int r = Tcl_Eval(Interp(env), script.lexemeValue->contents);
+
+	char buf[FLAG_BUF_LEN];
+	switch (r) {
+	case TCL_OK:
+		out->lexemeValue = OkFlag(env);
+		break;
+	case TCL_ERROR:
+		out->lexemeValue = ErrorFlag(env);
+		break;
+	default:
+		snprintf(buf, FLAG_BUF_LEN, "/%d/", r);
+		out->lexemeValue = CreateSymbol(env, buf);
+	}
+}
 static void clips_Tcl_EvalEx(
 	Environment *env, UDFContext *udfc, UDFValue *out)
 {
@@ -1413,6 +1435,10 @@ void CLIPS_Tcl_InitializeTclInterface(Environment *env, Tcl_Interp *interp)
 	AddUDF(env, "tcl-duplicate-obj", "e", 1, 1, ";e",
 	       clips_Tcl_DuplicateObj,
 	       "clips_Tcl_DuplicateObj", NULL);
+
+	AddUDF(env, "tcl-eval", "y", 1, 1, ";s",
+	       clips_Tcl_Eval,
+	       "clips_Tcl_Eval", NULL);
 
 	AddUDF(env, "tcl-eval-ex", "y", 3, 3, ";s;l;y",
 	       clips_Tcl_EvalEx,
