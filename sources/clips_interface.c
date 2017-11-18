@@ -189,9 +189,9 @@ static int tcl_CLIPS_Load(Tcl_Interp *interp,
 			  int objc,
 			  Tcl_Obj *const objv[])
 {
-	int r = Load(env, Tcl_GetString(objv[2]));
+	LoadError r = Load(env, Tcl_GetString(objv[2]));
 
-	if (r > 0)
+	if (r == LE_NO_ERROR)
 		return TCL_OK;
 	else
 		return TCL_ERROR;
