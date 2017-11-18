@@ -1120,33 +1120,17 @@ static void clips_Tcl_TcpAcceptProc(
 	Environment *env = ((void **) clientData)[0];
 	CLIPSLexeme *functionValue = ((void **) clientData)[1];
 
-	const int argc = 4;
-	void *argv[argc];
-	argv[0] = ((void **) clientData)[2];
-	argv[1] = CreateExternalAddress(
-		env, channel, CHANNEL_EXTERNAL_ADDRESS);
-	argv[2] = CreateString(env, hostName);
-	argv[3] = CreateInteger(env, port);
-
-	Expression reference;
-	GetFunctionReference(env, functionValue->contents, &reference);
-	ExpressionInstall(env, &reference);
-
-	Expression *p = NULL;
-	for (int i = 0; i < argc; ++i) {
-		Expression *c = GenConstant(
-			env, ((TypeHeader *) argv[i])->type, argv[i]);
-		if (p == NULL)
-			reference.argList = c;
-		else
-			p->nextArg = c;
-		p = c;
-		ExpressionInstall(env, p);
-	}
-
-	UDFValue returnValue;
-	EvaluateExpression(env, &reference, &returnValue);
-	ExpressionDeinstall(env, &reference);
+	FunctionCallBuilder *fcb = CreateFunctionCallBuilder(env, 4);
+	CLIPSValue data;
+	data.value = ((void **) clientData)[2];
+	FCBAppend(fcb, &data);
+	FCBAppendCLIPSExternalAddress(
+		fcb,
+		CreateExternalAddress(env, channel, CHANNEL_EXTERNAL_ADDRESS));
+	FCBAppendString(fcb, hostName);
+	FCBAppendInteger(fcb, port);
+	FCBCall(fcb,functionValue->contents, NULL);
+	FCBDispose(fcb);
 }
 
 static void clips_Tcl_OpenTcpServerCloseProc(
