@@ -119,6 +119,19 @@ static int tcl_CLIPS_DefglobalGetValue(Tcl_Interp *interp,
 	return TCL_OK;
 }
 
+static int tcl_CLIPS_DefglobalSetString(Tcl_Interp *interp,
+					Environment *env,
+					int objc,
+					Tcl_Obj *const objv[])
+{
+	Defglobal **d = (void *) Tcl_GetByteArrayFromObj(objv[2], NULL);
+	const char *value = Tcl_GetString(objv[3]);
+
+	DefglobalSetString(*d, value);
+
+	return TCL_OK;
+}
+
 static int tcl_CLIPS_DefglobalSetValue(Tcl_Interp *interp,
 				       Environment *env,
 				       int objc,
@@ -492,10 +505,23 @@ static int clips_Tcl_ObjCmdProc(ClientData clientData,
 			return tcl_CLIPS_DefglobalGetValue(interp,
 							   env, objc, objv);
 		case 's':
-			assert(strcmp(command, "defglobal-set-value") == 0);
-			assert(objc == 4);
-			return tcl_CLIPS_DefglobalSetValue(interp,
-							   env, objc, objv);
+			switch (command[14]) {
+			case 's':
+				assert(strcmp(command,
+					      "defglobal-set-string") == 0);
+				assert(objc == 4);
+				return tcl_CLIPS_DefglobalSetString(
+					interp, env, objc, objv);
+			case 'v':
+				assert(strcmp(command,
+					      "defglobal-set-value") == 0);
+				assert(objc == 4);
+				return tcl_CLIPS_DefglobalSetValue(
+					interp, env, objc, objv);
+			default:
+				assert(false);
+			}
+
 		default:
 			assert(false);
 		}
