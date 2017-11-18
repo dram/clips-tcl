@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  10/11/17             */
+   /*            CLIPS Version 6.40  11/13/17             */
    /*                                                     */
    /*              CONSTRUCT PARSER MODULE                */
    /*******************************************************/
@@ -97,14 +97,15 @@
 
    static bool                    FindConstructBeginning(Environment *,const char *,struct token *,bool,bool *);
 
-/************************************************************/
-/* Load: C access routine for the load command. Returns     */
-/*   0 if the file couldn't be opened, -1 if the file was   */
-/*   opened but an error occurred while loading constructs, */
-/*   and 1 if the file was opened and no errors occured     */
-/*   while loading.                                         */
-/************************************************************/
-int Load(
+/**********************************************************/
+/* Load: C access routine for the load command. Returns   */
+/*   LE_OPEN_FILE_ERROR if the file couldn't be opened,   */
+/*   LE_PARSING_ERROR if the file was opened but an error */
+/*   occurred while loading constructs, and LE_NO_ERROR   */
+/*   if the file was opened and no errors occured while   */
+/*   loading.                                             */
+/**********************************************************/
+LoadError Load(
   Environment *theEnv,
   const char *fileName)
   {
@@ -117,7 +118,7 @@ int Load(
    /*=======================================*/
 
    if ((theFile = GenOpen(theEnv,fileName,"r")) == NULL)
-     { return 0; }
+     { return LE_OPEN_FILE_ERROR; }
 
    /*===================================================*/
    /* Read in the constructs. Enabling fast load allows */
@@ -148,15 +149,15 @@ int Load(
 
    GenClose(theEnv,theFile);
 
-   /*========================================*/
-   /* If no errors occurred during the load, */
-   /* return 1, otherwise return -1.         */
-   /*========================================*/
+   /*=================================================*/
+   /* If no errors occurred during the load, return   */
+   /* LE_NO_ERROR, otherwise return LE_PARSING_ERROR. */
+   /*=================================================*/
 
    if (noErrorsDetected)
-     { return 1; }
+     { return LE_NO_ERROR; }
 
-   return -1;
+   return LE_PARSING_ERROR;
   }
 
 /*******************/
@@ -297,7 +298,7 @@ bool LoadConstructsFromLogicalName(
   Environment *theEnv,
   const char *readSource)
   {
-   int constructFlag;
+   BuildError constructFlag;
    struct token theToken;
    bool noErrors = true;
    bool foundConstruct;
@@ -364,7 +365,7 @@ bool LoadConstructsFromLogicalName(
       /* is found).                                                   */
       /*==============================================================*/
 
-      if (constructFlag == 1)
+      if (constructFlag == BE_PARSING_ERROR)
         {
          WriteString(theEnv,STDERR,"\nERROR:\n");
          WriteString(theEnv,STDERR,GetPPBuffer(theEnv));
@@ -722,19 +723,16 @@ void FlushParsingMessages(
    ConstructData(theEnv)->MaxWrnChars = 0;
   }
 
-/***********************************************************/
-/* ParseConstruct: Parses a construct. Returns an integer. */
-/*   -1 if the construct name has no parsing function, 0   */
-/*   if the construct was parsed successfully, and 1 if    */
-/*   the construct was parsed unsuccessfully.              */
-/***********************************************************/
-int ParseConstruct(
+/***************************************/
+/* ParseConstruct: Parses a construct. */
+/***************************************/
+BuildError ParseConstruct(
   Environment *theEnv,
   const char *name,
   const char *logicalName)
   {
    Construct *currentPtr;
-   int rv;
+   BuildError rv;
    bool ov;
    GCBlock gcb;
 
@@ -744,7 +742,7 @@ int ParseConstruct(
    /*=================================*/
 
    currentPtr = FindConstruct(theEnv,name);
-   if (currentPtr == NULL) return(-1);
+   if (currentPtr == NULL) return BE_CONSTRUCT_NOT_FOUND_ERROR;
 
    /*==========================================*/
    /* Set up the frame for garbage collection. */
@@ -771,9 +769,9 @@ int ParseConstruct(
    ConstructData(theEnv)->ParsingConstruct = true;
    
    if ((*currentPtr->parseFunction)(theEnv,logicalName))
-     { rv = 1; }
+     { rv = BE_PARSING_ERROR; }
    else
-     { rv = 0; }
+     { rv = BE_NO_ERROR; }
      
    ConstructData(theEnv)->ParsingConstruct = false;
 

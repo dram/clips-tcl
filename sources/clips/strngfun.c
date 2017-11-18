@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  10/04/17             */
+   /*            CLIPS Version 6.40  11/13/17             */
    /*                                                     */
    /*            STRING_TYPE FUNCTIONS MODULE             */
    /*******************************************************/
@@ -72,6 +72,9 @@
 /*                                                           */
 /*            The str-index function now returns 1 if the    */
 /*            search string is "".                           */
+/*                                                           */
+/*            The eval and build functions generate an       */
+/*            error if extraneous input is encountered.      */
 /*                                                           */
 /*************************************************************/
 
@@ -708,7 +711,7 @@ void EvalFunction(
 /* Eval: C access routine   */
 /*   for the eval function. */
 /****************************/
-bool Eval(
+EvalError Eval(
   Environment *theEnv,
   const char *theString,
   CLIPSValue *returnValue)
@@ -721,6 +724,7 @@ bool Eval(
    int danglingConstructs;
    UDFValue evalResult;
    GCBlock gcb;
+   struct token theToken;
 
    /*========================================*/
    /* Set up the frame for tracking garbage. */
@@ -744,11 +748,8 @@ bool Eval(
    gensprintf(logicalNameBuffer,"Eval-%d",depth);
    if (OpenStringSource(theEnv,logicalNameBuffer,theString,0) == 0)
      {
-      GCBlockEnd(theEnv,&gcb);
-      if (returnValue != NULL)
-        { returnValue->lexemeValue = FalseSymbol(theEnv); }
-      depth--;
-      return false;
+      SystemError(theEnv,"STRNGFUN",1);
+      ExitRouter(theEnv,EXIT_FAILURE);
      }
 
    /*================================================*/
@@ -789,27 +790,27 @@ bool Eval(
         { returnValue->lexemeValue = FalseSymbol(theEnv); }
       depth--;
       ConstructData(theEnv)->DanglingConstructs = danglingConstructs;
-      return false;
+      return EE_PARSING_ERROR;
      }
+     
+   /*======================================*/
+   /* Return if there is extraneous input. */
+   /*======================================*/
 
-   /*==============================================*/
-   /* The sequence expansion operator must be used */
-   /* within the argument list of a function call. */
-   /*==============================================*/
-
-   if ((top->type == MF_GBL_VARIABLE) || (top->type == MF_VARIABLE))
+   GetToken(theEnv,logicalNameBuffer,&theToken);
+   if (theToken.tknType != STOP_TOKEN)
      {
-      PrintErrorID(theEnv,"MISCFUN",1,false);
-      WriteString(theEnv,STDERR,"Sequence expansion must be used in the argument list of a function call.\n");
+      PrintErrorID(theEnv,"STRNGFUN",2,false);
+      WriteString(theEnv,STDERR,"Function 'eval' encountered extraneous input.\n");
       SetEvaluationError(theEnv,true);
+      ReturnExpression(theEnv,top);
       CloseStringSource(theEnv,logicalNameBuffer);
       GCBlockEnd(theEnv,&gcb);
       if (returnValue != NULL)
         { returnValue->lexemeValue = FalseSymbol(theEnv); }
-      ReturnExpression(theEnv,top);
       depth--;
       ConstructData(theEnv)->DanglingConstructs = danglingConstructs;
-      return false;
+      return EE_PARSING_ERROR;
      }
 
    /*====================================*/
@@ -864,8 +865,9 @@ bool Eval(
    if (returnValue != NULL)
      { returnValue->value = evalResult.value; }
    
-   if (GetEvaluationError(theEnv)) return false;
-   return true;
+   if (GetEvaluationError(theEnv)) return EE_PROCESSING_ERROR;
+   
+   return EE_NO_ERROR;
   }
 
 #if (! RUN_TIME) && (! BLOAD_ONLY)
@@ -879,6 +881,7 @@ void BuildFunction(
   UDFValue *returnValue)
   {
    UDFValue theArg;
+   BuildError rv;
 
    /*==================================================*/
    /* The argument should be of type SYMBOL or STRING. */
@@ -891,20 +894,21 @@ void BuildFunction(
    /* Build the construct. */
    /*======================*/
 
-   returnValue->lexemeValue = CreateBoolean(theEnv,(Build(theEnv,theArg.lexemeValue->contents)));
+   rv = Build(theEnv,theArg.lexemeValue->contents);
+   returnValue->lexemeValue = CreateBoolean(theEnv,(rv == BE_NO_ERROR));
   }
 
 /*****************************/
 /* Build: C access routine   */
 /*   for the build function. */
 /*****************************/
-bool Build(
+BuildError Build(
   Environment *theEnv,
   const char *theString)
   {
    const char *constructType;
    struct token theToken;
-   int errorFlag;
+   BuildError errorFlag;
    GCBlock gcb;
    
    /*=====================================*/
@@ -919,7 +923,7 @@ bool Build(
    /*====================================================*/
 
 #if DEFRULE_CONSTRUCT
-   if (EngineData(theEnv)->JoinOperationInProgress) return false;
+   if (EngineData(theEnv)->JoinOperationInProgress) return BE_COULD_NOT_BUILD_ERROR;
 #endif
 
    /*===========================================*/
@@ -928,7 +932,7 @@ bool Build(
    /*===========================================*/
 
    if (OpenStringSource(theEnv,"build",theString,0) == 0)
-     { return false; }
+     { return BE_COULD_NOT_BUILD_ERROR; }
 
    /*===================================*/
    /* Start a garbage collection block. */
@@ -947,7 +951,7 @@ bool Build(
      {
       CloseStringSource(theEnv,"build");
       GCBlockEnd(theEnv,&gcb);
-      return false;
+      return BE_PARSING_ERROR;
      }
 
    /*==============================================*/
@@ -959,7 +963,7 @@ bool Build(
      {
       CloseStringSource(theEnv,"build");
       GCBlockEnd(theEnv,&gcb);
-      return false;
+      return BE_PARSING_ERROR;
      }
 
    constructType = theToken.lexemeValue->contents;
@@ -969,6 +973,12 @@ bool Build(
    /*======================*/
 
    errorFlag = ParseConstruct(theEnv,constructType,"build");
+
+   /*=============================*/
+   /* Grab any extraneous token. */
+   /*============================*/
+   
+   GetToken(theEnv,"build",&theToken);
 
    /*=================================*/
    /* Close the string source router. */
@@ -981,7 +991,7 @@ bool Build(
    /* construct, then print an error message. */
    /*=========================================*/
 
-   if (errorFlag == 1)
+   if (errorFlag == BE_PARSING_ERROR)
      {
       WriteString(theEnv,STDERR,"\nERROR:\n");
       WriteString(theEnv,STDERR,GetPPBuffer(theEnv));
@@ -996,14 +1006,23 @@ bool Build(
    
    GCBlockEnd(theEnv,&gcb);
 
-   /*===============================================*/
-   /* Return true if the construct was successfully */
-   /* parsed, otherwise return false.               */
-   /*===============================================*/
+   /*===================================*/
+   /* Throw error for extraneous input. */
+   /*===================================*/
+   
+   if ((errorFlag == BE_NO_ERROR) && (theToken.tknType != STOP_TOKEN))
+     {
+      PrintErrorID(theEnv,"STRNGFUN",2,false);
+      WriteString(theEnv,STDERR,"Function 'build' encountered extraneous input.\n");
+      SetEvaluationError(theEnv,true);
+      errorFlag = BE_PARSING_ERROR;
+     }
 
-   if (errorFlag == 0) return true;
+   /*===================================================*/
+   /* Return the error code from parsing the construct. */
+   /*===================================================*/
 
-   return false;
+   return errorFlag;
   }
 #else
 /**************************************************/
@@ -1024,13 +1043,13 @@ void BuildFunction(
 /* Build: This is the non-functional stub provided */
 /*   for use with a run-time version.              */
 /***************************************************/
-bool Build(
+BuildError Build(
   Environment *theEnv,
   const char *theString)
   {
    PrintErrorID(theEnv,"STRNGFUN",1,false);
    WriteString(theEnv,STDERR,"Function 'build' does not work in run time modules.\n");
-   return false;
+   return BE_COULD_NOT_BUILD_ERROR;
   }
 #endif /* (! RUN_TIME) && (! BLOAD_ONLY) */
 

@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  10/18/16             */
+   /*            CLIPS Version 6.40  11/13/17             */
    /*                                                     */
    /*                COMMAND LINE MODULE                  */
    /*******************************************************/
@@ -79,6 +79,13 @@
 /*            UDF redesign.                                  */
 /*                                                           */
 /*            Eval support for run time and bload only.      */
+/*                                                           */
+/*            Removed fflush of stdin.                       */
+/*                                                           */
+/*            Use of ?<var>, $?<var>, ?*<var>, and  $?*var*  */
+/*            by itself at the command prompt and within     */
+/*            the eval function now consistently returns the */
+/*            value of  the variable.                        */
 /*                                                           */
 /*************************************************************/
 
@@ -680,9 +687,6 @@ void CommandLoop(
          SetHaltExecution(theEnv,false);
          SetEvaluationError(theEnv,false);
          FlushCommandString(theEnv);
-#if ! WINDOW_INTERFACE
-         fflush(stdin);
-#endif
          WriteString(theEnv,STDOUT,"\n");
          PrintPrompt(theEnv);
         }
@@ -776,9 +780,6 @@ void CommandLoopBatchDriver(
          SetHaltExecution(theEnv,false);
          SetEvaluationError(theEnv,false);
          FlushCommandString(theEnv);
-#if ! WINDOW_INTERFACE
-         fflush(stdin);
-#endif
          WriteString(theEnv,STDOUT,"\n");
          PrintPrompt(theEnv);
         }
@@ -889,10 +890,10 @@ void SetBeforeCommandExecutionFunction(
    CommandLineData(theEnv)->BeforeCommandExecutionCallback = funptr;
   }
 
-/********************************************************/
-/* RouteCommand: Processes a completed command. Returns */
-/*   1 if a command could be parsed, otherwise 0.       */
-/********************************************************/
+/*********************************************************/
+/* RouteCommand: Processes a completed command. Returns  */
+/*   true if a command could be parsed, otherwise false. */
+/*********************************************************/
 bool RouteCommand(
   Environment *theEnv,
   const char *command,
@@ -938,6 +939,7 @@ bool RouteCommand(
    /*=====================*/
 
    if ((theToken.tknType == GBL_VARIABLE_TOKEN) ||
+       (theToken.tknType == MF_GBL_VARIABLE_TOKEN) ||
        (theToken.tknType == SF_VARIABLE_TOKEN) ||
        (theToken.tknType == MF_VARIABLE_TOKEN))
      {
@@ -988,13 +990,13 @@ bool RouteCommand(
 
 #if (! RUN_TIME) && (! BLOAD_ONLY)
    {
-    int errorFlag;
+    BuildError errorFlag;
 
     errorFlag = ParseConstruct(theEnv,commandName,"command");
-    if (errorFlag != -1)
+    if (errorFlag != BE_CONSTRUCT_NOT_FOUND_ERROR)
       {
        CloseStringSource(theEnv,"command");
-       if (errorFlag == 1)
+       if (errorFlag == BE_PARSING_ERROR)
          {
           WriteString(theEnv,STDERR,"\nERROR:\n");
           WriteString(theEnv,STDERR,GetPPBuffer(theEnv));
@@ -1005,8 +1007,8 @@ bool RouteCommand(
        SetWarningFileName(theEnv,NULL);
        SetErrorFileName(theEnv,NULL);
 
-       if (errorFlag) return false;
-       else return true;
+       if (errorFlag == BE_NO_ERROR) return true;
+       else return false;
       }
    }
 #endif

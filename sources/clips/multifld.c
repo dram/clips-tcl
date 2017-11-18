@@ -1,9 +1,9 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*            CLIPS Version 6.40  10/01/16             */
+   /*            CLIPS Version 6.40  11/17/17             */
    /*                                                     */
-   /*                  MULTIFIELD_TYPE MODULE                  */
+   /*                  MULTIFIELD MODULE                  */
    /*******************************************************/
 
 /*************************************************************/
@@ -415,6 +415,33 @@ void CLIPSToUDFValue(
       uv->begin = 0;
       uv->range = cv->multifieldValue->length;
      }
+  }
+
+/********************/
+/* UDFToCLIPSValue: */
+/********************/
+void UDFToCLIPSValue(
+  Environment *theEnv,
+  UDFValue *uv,
+  CLIPSValue *cv)
+  {
+   Multifield *copy;
+   
+   if (uv->header->type != MULTIFIELD_TYPE)
+     {
+      cv->value = uv->value;
+      return;
+     }
+   
+   if ((uv->begin == 0) &&
+       (uv->range == uv->multifieldValue->length))
+     { return; }
+     
+   copy = CreateMultifield(theEnv,uv->range);
+   GenCopyMemory(struct clipsValue,uv->range,&copy->contents[0],
+                 &uv->multifieldValue->contents[uv->begin]);
+      
+   cv->multifieldValue = copy;
   }
 
 /************************************************/
@@ -1011,7 +1038,6 @@ MultifieldBuilder *CreateMultifieldBuilder(
    MultifieldBuilder *theMB;
    
    theMB = get_struct(theEnv,multifieldBuilder);
-   if (theMB == NULL) return NULL;
    
    theMB->mbEnv = theEnv;
    theMB->bufferReset = theSize;
@@ -1187,38 +1213,10 @@ void MBAppendCLIPSInteger(
    MBAppend(theMB,&theValue);
   }
 
-/****************/
-/* MBAppendInt: */
-/****************/
-void MBAppendInt(
-  MultifieldBuilder *theMB,
-  int intValue)
-  {
-   CLIPSValue theValue;
-   CLIPSInteger *pv = CreateInteger(theMB->mbEnv,intValue);
-   
-   theValue.integerValue = pv;
-   MBAppend(theMB,&theValue);
-  }
-
-/*****************/
-/* MBAppendLong: */
-/****************/
-void MBAppendLong(
-  MultifieldBuilder *theMB,
-  long intValue)
-  {
-   CLIPSValue theValue;
-   CLIPSInteger *pv = CreateInteger(theMB->mbEnv,intValue);
-   
-   theValue.integerValue = pv;
-   MBAppend(theMB,&theValue);
-  }
-
-/*********************/
-/* MBAppendLongLong: */
-/*********************/
-void MBAppendLongLong(
+/********************/
+/* MBAppendInteger: */
+/********************/
+void MBAppendInteger(
   MultifieldBuilder *theMB,
   long long intValue)
   {
@@ -1246,20 +1244,6 @@ void MBAppendCLIPSFloat(
 /* MBAppendFloat: */
 /******************/
 void MBAppendFloat(
-  MultifieldBuilder *theMB,
-  float floatValue)
-  {
-   CLIPSValue theValue;
-   CLIPSFloat *pv = CreateFloat(theMB->mbEnv,floatValue);
-   
-   theValue.floatValue = pv;
-   MBAppend(theMB,&theValue);
-  }
-
-/*******************/
-/* MBAppendDouble: */
-/*******************/
-void MBAppendDouble(
   MultifieldBuilder *theMB,
   double floatValue)
   {

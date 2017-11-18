@@ -1,7 +1,7 @@
    /*******************************************************/
    /*      "C" Language Integrated Production System      */
    /*                                                     */
-   /*             CLIPS Version 6.40  10/04/17            */
+   /*             CLIPS Version 6.40  11/15/17            */
    /*                                                     */
    /*                 UTILITY HEADER FILE                 */
    /*******************************************************/
@@ -222,6 +222,8 @@ struct utilityData
    StringBuilder                 *CreateStringBuilder(Environment *,size_t);
    void                           SBDispose(StringBuilder *);
    void                           SBAppend(StringBuilder *,const char *);
+   void                           SBAppendInteger(StringBuilder *,long long);
+   void                           SBAppendFloat(StringBuilder *,double);
    void                           SBAddChar(StringBuilder *,int);
    void                           SBReset(StringBuilder *);
    char                          *SBCopy(StringBuilder *);
