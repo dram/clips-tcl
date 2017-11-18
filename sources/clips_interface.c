@@ -152,9 +152,9 @@ static int tcl_CLIPS_Eval(Tcl_Interp *interp,
 {
 	CLIPSValue value;
 
-	bool r = Eval(env, Tcl_GetString(objv[2]), &value);
+	EvalError r = Eval(env, Tcl_GetString(objv[2]), &value);
 
-	if (r) {
+	if (r == EE_NO_ERROR) {
 		Tcl_Obj *obj = tcl_clips_ValueToObj(env, interp, &value);
 
 		if (obj == NULL)
