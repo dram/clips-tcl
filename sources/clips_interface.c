@@ -83,9 +83,9 @@ static int tcl_CLIPS_Build(Tcl_Interp *interp,
 			   int objc,
 			   Tcl_Obj *const objv[])
 {
-	bool r = Build(env, Tcl_GetString(objv[2]));
+	BuildError r = Build(env, Tcl_GetString(objv[2]));
 
-	if (r)
+	if (r == BE_NO_ERROR)
 		return TCL_OK;
 	else
 		return TCL_ERROR;
