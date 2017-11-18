@@ -138,9 +138,11 @@ static int tcl_CLIPS_DefglobalSetValue(Tcl_Interp *interp,
 				       Tcl_Obj *const objv[])
 {
 	Defglobal **d = (void *) Tcl_GetByteArrayFromObj(objv[2], NULL);
-	CLIPSValue **in = (void *) Tcl_GetByteArrayFromObj(objv[3], NULL);
+	void **p = (void *) Tcl_GetByteArrayFromObj(objv[3], NULL);
 
-	DefglobalSetValue(*d, *in);
+	CLIPSValue value;
+	value.value = *p;
+	DefglobalSetValue(*d, &value);
 
 	return TCL_OK;
 }
